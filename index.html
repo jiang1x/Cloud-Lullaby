@@ -1,0 +1,2388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>云端枕边书 Cloud Lullaby</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html, body, #root { height: 100%; margin: 0; padding: 0; overscroll-behavior: none; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #0a0a0a; -webkit-tap-highlight-color: transparent; }
+  .paper-texture { background-color: #fffdf7; background-image: radial-gradient(rgba(180,140,90,0.08) 1px, transparent 1px), radial-gradient(rgba(180,140,90,0.05) 1px, transparent 1px); background-size: 20px 20px, 13px 13px; background-position: 0 0, 6px 6px; }
+  .child-bg { background: linear-gradient(135deg, #d4f4dd 0%, #fef6c7 40%, #fcd5ce 75%, #e2d5f7 100%); background-size: 200% 200%; animation: gradientShift 18s ease infinite; }
+  @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+  .brush-tool { transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease; transform-origin: bottom center; }
+  .brush-tool.active { transform: translateY(-18px) scale(1.18); }
+  .brush-tool:active { transform: translateY(-6px) scale(0.95); }
+  .magic-btn { background: linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%); box-shadow: 0 10px 30px rgba(255,106,136,0.45), inset 0 -4px 8px rgba(0,0,0,0.08); }
+  .magic-btn-active { background: linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #ff69b4 100%); box-shadow: 0 0 50px rgba(255, 20, 147, 0.6), 0 8px 24px rgba(255, 20, 147, 0.4); animation: magicPulse 1.4s ease-in-out infinite; }
+  @keyframes magicPulse { 0%,100%{transform:scale(1);box-shadow:0 0 50px rgba(255,20,147,0.6), 0 8px 24px rgba(255,20,147,0.4)} 50%{transform:scale(1.1);box-shadow:0 0 90px rgba(255,20,147,0.9), 0 12px 40px rgba(255,20,147,0.6)} }
+  .sparkle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: white; animation: sparkle 2s linear infinite; pointer-events: none; }
+  @keyframes sparkle { 0%,100%{opacity:0;transform:scale(0)} 50%{opacity:1;transform:scale(1.2)} }
+  .owl-float { animation: floatOwl 3s ease-in-out infinite; }
+  @keyframes floatOwl { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
+  .owl-bubble-float { animation: bubbleFloat 3s ease-in-out infinite; animation-delay: 0.5s; }
+  @keyframes bubbleFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .owl-zzz { animation: zzz 2.5s ease-in-out infinite; }
+  @keyframes zzz { 0%{opacity:0;transform:translate(0,0) scale(0.6)} 50%{opacity:1} 100%{opacity:0;transform:translate(20px,-20px) scale(1.2)} }
+
+  /* 魔法水晶球麦克风 */
+  .crystal-ball {
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(200, 220, 255, 0.5) 15%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(167, 139, 250, 0.85) 0%, rgba(139, 92, 246, 0.9) 35%, rgba(91, 33, 182, 1) 100%);
+    box-shadow:
+      inset 0 -12px 40px rgba(0, 0, 0, 0.35),
+      inset 0 12px 40px rgba(255, 255, 255, 0.45),
+      0 0 50px rgba(167, 139, 250, 0.7),
+      0 0 100px rgba(139, 92, 246, 0.35);
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    animation: crystalBreathing 4s ease-in-out infinite;
+  }
+  @keyframes crystalBreathing { 0%,100%{transform:scale(1);box-shadow:inset 0 -12px 40px rgba(0,0,0,0.35), inset 0 12px 40px rgba(255,255,255,0.45), 0 0 50px rgba(167,139,250,0.7), 0 0 100px rgba(139,92,246,0.35)} 50%{transform:scale(1.04);box-shadow:inset 0 -12px 40px rgba(0,0,0,0.35), inset 0 12px 40px rgba(255,255,255,0.55), 0 0 70px rgba(167,139,250,0.85), 0 0 120px rgba(139,92,246,0.5)} }
+  .crystal-ball-recording {
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 200, 220, 0.6) 15%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(255, 100, 130, 0.9) 0%, rgba(239, 68, 100, 0.95) 35%, rgba(180, 20, 60, 1) 100%);
+    box-shadow:
+      inset 0 -12px 40px rgba(0, 0, 0, 0.4),
+      inset 0 12px 40px rgba(255, 255, 255, 0.55),
+      0 0 60px rgba(239, 68, 100, 0.8),
+      0 0 120px rgba(239, 68, 100, 0.45);
+    animation: none;
+    transform: scale(1.05);
+  }
+  .sound-wave-ring { position: absolute; inset: -8px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.4); animation: soundWaveExpand 2s ease-out infinite; pointer-events: none; }
+  .sound-wave-ring:nth-child(2) { animation-delay: 0.4s; }
+  .sound-wave-ring:nth-child(3) { animation-delay: 0.8s; }
+  .sound-wave-ring:nth-child(4) { animation-delay: 1.2s; }
+  @keyframes soundWaveExpand { 0%{transform:scale(1);opacity:0.7} 100%{transform:scale(2.6);opacity:0} }
+
+  /* 信封飞 */
+  .envelope-fly { animation: envelopeFly 1.8s cubic-bezier(.5,0,.3,1) forwards; filter: drop-shadow(0 12px 30px rgba(0,0,0,0.25)); }
+  @keyframes envelopeFly { 0%{transform:translateY(60px) scale(0.5) rotate(-8deg);opacity:0} 18%{transform:translateY(0) scale(1.05) rotate(0);opacity:1} 35%{transform:translateY(-20px) scale(1) rotate(-4deg);opacity:1} 65%{transform:translateY(-180px) scale(1.1) rotate(8deg);opacity:1} 100%{transform:translateY(-130vh) scale(1.4) rotate(20deg);opacity:0} }
+  .trail-star { position: absolute; font-size: 18px; animation: trailStar 1.4s ease-out forwards; pointer-events: none; }
+  @keyframes trailStar { 0%{opacity:1;transform:translateY(0) scale(.6)} 100%{opacity:0;transform:translateY(40px) scale(.2)} }
+
+  /* 打字机 */
+  .typer-cursor { display:inline-block; width:2px; height:1em; background:currentColor; margin-left:2px; vertical-align:text-bottom; animation: blink .9s steps(1) infinite; }
+  @keyframes blink { 50%{opacity:0} }
+
+  /* 手机模型 */
+  .mobile-mockup { width:390px; height:800px; border-radius:50px; background:#1a1a1a; padding:14px; box-shadow: 0 30px 80px rgba(0,0,0,0.4), 0 0 0 2px #2a2a2a; position:relative; }
+  .mobile-mockup::before { content:''; position:absolute; top:22px; left:50%; transform:translateX(-50%); width:110px; height:28px; background:#000; border-radius:20px; z-index:30; }
+  .mobile-screen { width:100%; height:100%; border-radius:38px; overflow:hidden; background:#f5f5f7; position:relative; }
+
+  canvas { touch-action: none; display: block; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .console-btn { transition: all .2s ease; border: 1px solid rgba(255,255,255,0.15); }
+  .console-btn:hover { background: rgba(255,255,255,0.08); }
+  .console-btn.active { background: rgba(255,255,255,0.95); color:#000; border-color:white; }
+  .yawn-bubble { animation: yawnBob 3.2s ease-in-out infinite; }
+  @keyframes yawnBob { 0%,100%{transform:scale(1) translateY(0);opacity:.6} 50%{transform:scale(1.15) translateY(-3px);opacity:1} }
+  .thumb-card { transition: transform .4s ease; }
+  .thumb-card:hover { transform: rotate(-3deg) scale(1.04); }
+
+  /* 情绪雷达 */
+  .radar-bg { position: relative; overflow: hidden; }
+  .radar-bg::after { content:''; position:absolute; top:50%; left:50%; width:200px; height:200px; transform:translate(-50%,-50%); background: radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 70%); border-radius:50%; animation: radarPulse 3s ease-in-out infinite; pointer-events:none; }
+  @keyframes radarPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.5} 50%{transform:translate(-50%,-50%) scale(1.3);opacity:.2} }
+
+  /* loading */
+  .loading-spin { border: 4px solid #e5e7eb; border-top-color: #ff6a88; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 书本 */
+  .book-page { background: linear-gradient(135deg, #fff8e7 0%, #ffe0b2 100%); }
+
+  /* 绘本阅读器 */
+  .page-content { animation: pageContentIn .4s ease; }
+  @keyframes pageContentIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ========== Landing Page ========== */
+  .landing-bg { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+  /* 深邃动态银河背景 */
+  .cosmos-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 85%, rgba(30, 27, 75, 0.9) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 15%, rgba(49, 46, 129, 0.8) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(8, 8, 25, 0.95) 0%, transparent 70%),
+      linear-gradient(160deg, #010108 0%, #060618 25%, #0f0a20 50%, #0a0a1a 75%, #02020a 100%);
+    background-size: 200% 200%, 200% 200%, 200% 200%, 300% 300%;
+    animation: cosmosFlow 25s ease infinite;
+    z-index: 0;
+  }
+  @keyframes cosmosFlow {
+    0%,100%{background-position:0% 50%, 100% 50%, 50% 100%, 0% 50%}
+    33%{background-position:100% 50%, 0% 100%, 100% 0%, 50% 100%}
+    66%{background-position:50% 100%, 100% 0%, 0% 50%, 100% 50%}
+  }
+
+  /* 鼠标跟随发光特效已彻底移除（曾因 setState/mousemove 导致背景疯狂闪烁） */
+
+
+  /* 流星 */
+  .shooting-star {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 10px 2px rgba(255,255,255,0.8), 0 0 30px 6px rgba(167,139,250,0.3);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .shooting-star::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    transform: translateY(-50%);
+    border-radius: 0 50% 50% 0;
+  }
+  .shooting-star-1 { top: 10%; left: 70%; animation: shoot1 8s linear infinite; animation-delay: 1s; }
+  .shooting-star-2 { top: 5%; left: 50%; animation: shoot2 10s linear infinite; animation-delay: 4s; }
+  .shooting-star-3 { top: 15%; left: 85%; animation: shoot3 9s linear infinite; animation-delay: 7s; }
+  @keyframes shoot1 {
+    0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
+    5% { opacity: 1; }
+    25% { transform: rotate(-45deg) translateX(-400px); opacity: 0; }
+    100% { opacity: 0; }
+  }
+  @keyframes shoot2 {
+    0% { transform: rotate(-40deg) translateX(0); opacity: 0; }
+    5% { opacity: 1; }
+    20% { transform: rotate(-40deg) translateX(-350px); opacity: 0; }
+    100% { opacity: 0; }
+  }
+  @keyframes shoot3 {
+    0% { transform: rotate(-50deg) translateX(0); opacity: 0; }
+    5% { opacity: 1; }
+    22% { transform: rotate(-50deg) translateX(-380px); opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  /* 原有star和cloud保留 */
+  .star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: starTwinkle var(--duration) ease-in-out infinite; animation-delay: var(--delay); pointer-events: none; }
+  @keyframes starTwinkle { 0%,100%{opacity:0;transform:scale(0.5)} 50%{opacity:var(--peak-opacity,0.8);transform:scale(1)} }
+  .cloud { position: absolute; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.04)); border-radius: 50%; filter: blur(18px); animation: cloudFloat var(--duration) ease-in-out infinite alternate; pointer-events: none; }
+  @keyframes cloudFloat { from{transform:translateX(0) translateY(0)} to{transform:translateX(var(--tx,30px)) translateY(var(--ty,-20px))} }
+
+  /* 新增多层繁星 */
+  .cosmos-star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .cosmos-star.big { animation: twinkleBig var(--duration) ease-in-out infinite; animation-delay: var(--delay); }
+  .cosmos-star.med { animation: twinkleMed var(--duration) ease-in-out infinite; animation-delay: var(--delay); }
+  .cosmos-star.small { animation: twinkleSmall var(--duration) ease-in-out infinite; animation-delay: var(--delay); }
+  @keyframes twinkleBig { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.3)} }
+  @keyframes twinkleMed { 0%,100%{opacity:0.1;transform:scale(0.6)} 50%{opacity:0.9;transform:scale(1.1)} }
+  @keyframes twinkleSmall { 0%,100%{opacity:0.05;transform:scale(0.5)} 50%{opacity:0.7;transform:scale(1)} }
+
+  /* 魔法童话书 - 增强3D */
+  .magic-book-wrapper { perspective: 1600px; }
+  .magic-book {
+    position: relative;
+    width: 820px;
+    height: 540px;
+    transform-style: preserve-3d;
+    transform: rotateX(10deg);
+  }
+  @media (max-width: 900px) {
+    .magic-book { transform: rotateX(10deg) scale(0.68); }
+  }
+  @media (max-width: 640px) {
+    .magic-book { transform: rotateX(10deg) scale(0.48); }
+  }
+
+  /* 书皮 */
+  .book-cover {
+    position: absolute;
+    inset: -18px;
+    background:
+      linear-gradient(145deg, #181540 0%, #2a2270 30%, #452888 50%, #2a2270 70%, #181540 100%);
+    border-radius: 28px;
+    box-shadow:
+      0 0 60px rgba(139, 92, 246, 0.4),
+      0 0 120px rgba(139, 92, 246, 0.15),
+      0 40px 90px rgba(0,0,0,0.7),
+      inset 0 1px 4px rgba(255,255,255,0.25),
+      inset 0 -4px 10px rgba(0,0,0,0.6);
+  }
+  .book-cover::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 23px;
+    border: 1px solid rgba(251, 191, 36, 0.12);
+    pointer-events: none;
+  }
+
+  /* 书页 */
+  .book-page-left, .book-page-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    background-color: #fffdf7;
+    overflow: hidden;
+  }
+  .book-page-left {
+    left: 0;
+    border-radius: 10px 4px 4px 10px;
+    background-image:
+      repeating-linear-gradient(180deg, transparent, transparent 22px, rgba(160,130,80,0.04) 22px, rgba(160,130,80,0.04) 23px);
+    box-shadow:
+      inset -12px 0 24px rgba(0,0,0,0.04),
+      inset -4px 0 8px rgba(255,255,255,0.9),
+      5px 5px 0 #e8e8e8,
+      10px 10px 0 #d8d8d8,
+      15px 15px 0 #c8c8c8,
+      20px 20px 0 #b8b8b8,
+      25px 25px 0 #a8a8a8,
+      30px 30px 40px rgba(0,0,0,0.2);
+  }
+  .book-page-right {
+    right: 0;
+    border-radius: 4px 10px 10px 4px;
+    background-image:
+      repeating-linear-gradient(180deg, transparent, transparent 22px, rgba(160,130,80,0.04) 22px, rgba(160,130,80,0.04) 23px);
+    box-shadow:
+      inset 12px 0 24px rgba(0,0,0,0.04),
+      inset 4px 0 8px rgba(255,255,255,0.9),
+      -5px 5px 0 #e8e8e8,
+      -10px 10px 0 #d8d8d8,
+      -15px 15px 0 #c8c8c8,
+      -20px 20px 0 #b8b8b8,
+      -25px 25px 0 #a8a8a8,
+      -30px 30px 40px rgba(0,0,0,0.2);
+  }
+
+  /* 书脊折痕 */
+  .book-spine-crease {
+    position: absolute;
+    left: 50%;
+    top: -3px;
+    bottom: -3px;
+    width: 40px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.06) 10%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0.06) 90%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* 页面边缘高光 */
+  .book-page-left::before, .book-page-right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 18px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .book-page-left::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, transparent 100%);
+  }
+  .book-page-right::before {
+    right: 0;
+    background: linear-gradient(-90deg, rgba(255,255,255,0.5) 0%, transparent 100%);
+  }
+
+  /* 手绘涂鸦风格 */
+  .kid-font {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', '华文行楷', 'STXingkai', 'cursive', sans-serif;
+  }
+  .doodle-text {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', '华文行楷', 'STXingkai', 'cursive', sans-serif;
+    color: #4a3f35;
+  }
+  .doodle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 220px;
+    padding: 14px 0;
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', '华文行楷', 'STXingkai', 'cursive', sans-serif;
+    font-size: 20px;
+    font-weight: bold;
+    color: #5a4a3a;
+    background:
+      radial-gradient(circle at 25% 25%, rgba(255,220,180,0.5) 0%, transparent 60%),
+      radial-gradient(circle at 75% 75%, rgba(255,200,200,0.4) 0%, transparent 60%),
+      #fff8f0;
+    border: 3px dashed #c4a882;
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 4px 4px 0 rgba(196,168,130,0.25);
+    transform: rotate(-1deg);
+  }
+  .doodle-btn:nth-child(2) {
+    transform: rotate(1.5deg);
+    background:
+      radial-gradient(circle at 30% 70%, rgba(200,220,255,0.5) 0%, transparent 60%),
+      radial-gradient(circle at 70% 30%, rgba(220,255,200,0.4) 0%, transparent 60%),
+      #f0f8ff;
+    border-color: #8fa8c8;
+    box-shadow: 4px 4px 0 rgba(143,168,200,0.25);
+  }
+  .doodle-btn:hover {
+    transform: rotate(0deg) scale(1.08);
+    border-style: solid;
+    border-width: 4px;
+    box-shadow: 6px 6px 0 rgba(196,168,130,0.35);
+  }
+  .doodle-btn:nth-child(2):hover {
+    box-shadow: 6px 6px 0 rgba(143,168,200,0.35);
+  }
+  .doodle-btn:active {
+    transform: rotate(0deg) scale(0.95);
+  }
+  .doodle-wiggle:hover {
+    animation: wiggle 0.4s ease-in-out;
+  }
+  @keyframes wiggle {
+    0%,100%{transform:rotate(0deg) scale(1.08)}
+    25%{transform:rotate(-3deg) scale(1.08)}
+    75%{transform:rotate(3deg) scale(1.08)}
+  }
+
+  /* ========== Dreamy Child UI ========== */
+  .child-dream-bg {
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(255, 200, 230, 0.55) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(180, 220, 255, 0.55) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(220, 180, 255, 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 15% 75%, rgba(180, 255, 240, 0.45) 0%, transparent 50%),
+      linear-gradient(160deg, #f0e6ff 0%, #d4e5ff 25%, #e0f7fa 50%, #ffe6f0 75%, #e8d5f7 100%);
+    background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 300% 300%;
+    animation: auroraFlow 20s ease infinite;
+  }
+  @keyframes auroraFlow {
+    0%,100%{background-position:0% 50%, 100% 50%, 50% 100%, 0% 100%, 0% 50%}
+    50%{background-position:100% 50%, 0% 100%, 100% 0%, 100% 0%, 100% 50%}
+  }
+  .child-dream-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(2px 2px at 40px 60px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(2px 2px at 90px 150px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.5px 1.5px at 180px 40px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(2px 2px at 250px 120px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 320px 80px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(2px 2px at 400px 180px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.5px 1.5px at 500px 50px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(2px 2px at 580px 160px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 650px 90px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(2px 2px at 720px 200px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.5px 1.5px at 800px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(2px 2px at 880px 140px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 950px 30px, rgba(255,255,255,0.9), transparent),
+      radial-gradient(2px 2px at 1050px 170px, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.5px 1.5px at 1120px 100px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(2px 2px at 1200px 190px, rgba(255,255,255,0.6), transparent);
+    background-size: 600px 300px;
+    animation: starfieldDrift 80s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes starfieldDrift { from{background-position:0 0} to{background-position:600px 300px} }
+  .dream-particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 70%); animation: particleFloat 10s ease-in-out infinite; pointer-events: none; }
+  @keyframes particleFloat { 0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:0.3} 25%{transform:translateY(-40px) translateX(20px) scale(1.3);opacity:0.9} 50%{transform:translateY(-80px) translateX(-15px) scale(0.9);opacity:0.4} 75%{transform:translateY(-40px) translateX(25px) scale(1.2);opacity:0.7} }
+  .magic-canvas-container {
+    border-radius: 1.5rem;
+    border: 4px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.3),
+      0 20px 60px rgba(139, 92, 246, 0.3),
+      0 0 100px rgba(167, 139, 250, 0.2),
+      inset 0 0 60px rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    overflow: hidden;
+  }
+  .glass-dock {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.25), inset 0 1px 1px rgba(255,255,255,0.4);
+    border-radius: 9999px;
+  }
+  .magic-glow { box-shadow: 0 0 40px rgba(236,72,153,0.45), 0 10px 30px rgba(255,106,136,0.3); }
+  .magic-glow:hover { box-shadow: 0 0 60px rgba(236,72,153,0.65), 0 14px 40px rgba(255,106,136,0.45); }
+
+  /* 魔法纸条滚动条 */
+  .magic-scroll::-webkit-scrollbar { width: 4px; }
+  .magic-scroll::-webkit-scrollbar-track { background: transparent; }
+  .magic-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 999px; }
+  .magic-scroll::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.4); }
+
+  /* ========== 儿童端教程页 / 全局可爱字体加固 ========== */
+  /* 教程页主按钮：大号 + 呼吸光晕 */
+  .tutorial-cta-btn {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', '华文行楷', 'STXingkai', 'cursive', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: white;
+    padding: 18px 56px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ffb6d9 0%, #ff69b4 50%, #c084fc 100%);
+    border: 4px solid rgba(255,255,255,0.85);
+    text-shadow: 0 2px 6px rgba(199, 33, 130, 0.4);
+    box-shadow:
+      0 0 40px rgba(255, 105, 180, 0.55),
+      0 8px 24px rgba(192, 132, 252, 0.4),
+      inset 0 -4px 0 rgba(0,0,0,0.08);
+    animation: tutorialPulse 2.2s ease-in-out infinite;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.2s ease;
+  }
+  @keyframes tutorialPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 40px rgba(255,105,180,0.55), 0 8px 24px rgba(192,132,252,0.4), inset 0 -4px 0 rgba(0,0,0,0.08); }
+    50%     { transform: scale(1.06); box-shadow: 0 0 90px rgba(255,105,180,0.95), 0 12px 36px rgba(192,132,252,0.7), inset 0 -4px 0 rgba(0,0,0,0.08); }
+  }
+  .tutorial-cta-btn:active { transform: scale(0.94); }
+
+  /* 教程页"魔法气泡" */
+  .magic-bubble {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', '华文行楷', 'STXingkai', 'cursive', sans-serif;
+    font-weight: 700;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 3px dashed rgba(167, 139, 250, 0.55);
+    border-radius: 28px;
+    padding: 14px 18px;
+    color: #4a3f35;
+    box-shadow: 0 8px 30px rgba(139,92,246,0.18);
+    animation: bubbleDrift 4s ease-in-out infinite;
+  }
+  .magic-bubble:nth-child(2) { animation-delay: 0.8s; border-color: rgba(244, 114, 182, 0.55); }
+  @keyframes bubbleDrift { 0%,100%{transform:translateY(0) rotate(-0.5deg)} 50%{transform:translateY(-6px) rotate(0.5deg)} }
+
+  /* 巨型咕咕教授外发光晕 */
+  .owl-aura {
+    position: absolute;
+    inset: -10%;
+    background: radial-gradient(circle, rgba(199,168,255,0.35) 0%, rgba(139,92,246,0.18) 35%, transparent 70%);
+    filter: blur(30px);
+    animation: auraBreath 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes auraBreath { 0%,100%{transform:scale(1);opacity:0.7} 50%{transform:scale(1.15);opacity:1} }
+
+  /* 儿童端·全局可爱字体加固
+     用单独 class 而不是 * 选择器，避免覆盖图标字体（emoji/lucide） */
+  .child-zone, .child-zone button, .child-zone p, .child-zone span:not(.emoji),
+  .child-zone h1, .child-zone h2, .child-zone h3, .child-zone div:not(.no-kid-font),
+  .child-zone textarea, .child-zone input, .child-zone label {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', '华文行楷', 'STXingkai', 'cursive', sans-serif;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useMemo } = React;
+
+/* ============== 全局状态 ============== */
+const ROLES = { CHILD: 'child', PARENT: 'parent' };
+const APP_STATES = {
+  LANDING:         'landing',
+  CHILD_TUTORIAL:  'child_tutorial',
+  CHILD_DRAWING:   'child_drawing',
+  CHILD_VOICE:     'child_voice',
+  CHILD_WAITING:   'child_waiting',
+  WAITING_PARENT:  'waiting_parent',
+  PARENT_REVIEW:   'parent_review',
+  BOOK_GENERATING: 'book_generating',
+  BOOK_READY:      'book_ready',
+};
+
+/* ============== 儿童心理学字典 ============== */
+const MOOD_DICTIONARY = {
+  "doodle_visual_taxonomy": {
+    "description": "随手涂鸦基础视觉特征分类字典 V4.0（百万级高精度临床扩容版，超100个特征节点，适配 VLM 特征提取与 LLM 语义映射）",
+    "subject_features_主体特征": {
+      "M01_aggressive_objects": { "name": "显性攻击主体", "description": "武器（刀、枪、炸弹）、带有獠牙/利爪的怪兽、火焰、喷发的火山等", "clinical_focus": "外部投射的攻击性，常作为极度缺乏安全感、遭受霸凌或内心极度愤怒的心理代偿", "vlm_prompt_tags": ["weapon","monster","fire","fangs","claws","explosion"] },
+      "M02_trapped_isolated_figures": { "name": "受困孤立主体", "description": "笼中的鸟/兽、被高墙困住的小人、被绳索捆绑的形象，或独自在巨大空白处的微小物", "clinical_focus": "强烈的束缚感，现实生活中可能受到严厉管束或陷入无法摆脱的困境（如无法回到父母身边）", "vlm_prompt_tags": ["cage","fence","tied up","isolated figure","wall blocking"] },
+      "M03_fading_fragile_life": { "name": "脆弱凋零主体", "description": "落叶、枯树、断翅的蝴蝶/鸟、正在融化的雪人、无五官的幽灵状人影", "clinical_focus": "生命力流失、抑郁倾向、强烈的无助感，潜意识认为自己是不完整的或即将消亡的", "vlm_prompt_tags": ["dead tree","falling leaves","broken wings","melting","faceless figure"] },
+      "M04_chaotic_abstract_mass": { "name": "纯抽象混沌体", "description": "无法识别任何现实事物，完全由乱线、色块、泥泞的涂抹叠加而成的巨大团块", "clinical_focus": "认知混乱、严重的情绪风暴，由于情绪过于复杂痛苦，儿童放弃了具象化表达", "vlm_prompt_tags": ["abstract mass","scribble cluster","unrecognizable shape","chaotic doodle"] },
+      "M05_hidden_erased_objects": { "name": "掩盖抹除主体", "description": "有明显被涂黑、粗暴划掉或用橡皮擦至纸张破损的具象痕迹", "clinical_focus": "隐性创伤、强烈的羞耻感或内疚感，渴望表达但又极度恐惧被发现的矛盾心理", "vlm_prompt_tags": ["crossed out","heavily erased","covered in black","scribbled over object"] },
+      "M06_barricaded_house": { "name": "重度防御房屋", "description": "画出的房子没有门窗，或者门窗画上了粗壮的铁栅栏、巨大的挂锁，房屋周围有铁丝网", "clinical_focus": "HTP典型特征，拒绝与外界沟通，对家庭温暖极度渴望同时又感到绝望和防御", "vlm_prompt_tags": ["house without door","barred windows","padlock","barbed wire around house"] },
+      "M07_weather_hazards": { "name": "恶劣天气意象", "description": "浓重的乌云、密集的暴雨、劈下的闪电、肆虐的龙卷风", "clinical_focus": "感知到环境充满了不可控的威胁，预感危机即将发生，内心处于高度警觉状态", "vlm_prompt_tags": ["heavy rain","dark clouds","lightning strike","tornado","storm"] },
+      "M08_transportation_away": { "name": "离去交通工具", "description": "背向画面的火车、开走的汽车/大巴、逐渐飞远的飞机", "clinical_focus": "典型的分离焦虑投射，重现父母离开家乡去打工的创伤场景，潜意识渴望追随或阻止", "vlm_prompt_tags": ["train moving away","bus rear view","airplane flying away"] },
+      "M09_surrogate_comfort": { "name": "替代性抚慰物", "description": "异常巨大或精细刻画的毛绒玩具、宠物、毯子，而人物本身显得很小", "clinical_focus": "情感转移，由于真实依恋对象（父母）缺位，将情感和安全感全部寄托于无生命的物体或宠物", "vlm_prompt_tags": ["oversized teddy bear","pet focus","security blanket"] },
+      "M10_impenetrable_obstacle": { "name": "不可逾越障碍", "description": "横亘在画面中间的巨大山脉、深渊、河流，阻断了道路或人物的连接", "clinical_focus": "感知到现实中存在无法克服的困难（如遥远的地理距离导致无法见父母）", "vlm_prompt_tags": ["giant mountain","deep abyss","wide river blocking path","brick wall"] },
+      "M11_head_emphasis": { "name": "头部极其夸张", "description": "人物或动物的头部大得极其不合比例，或过分强调大脑", "clinical_focus": "过度思考、理智化防御、可能面临学业高压或头痛躯体化症状", "vlm_prompt_tags": ["huge head","disproportionate head","macrocephaly drawing"] },
+      "M12_limb_omission": { "name": "四肢或五官缺失", "description": "画出的人物没有手脚，或者脸部没有任何五官", "clinical_focus": "严重的无力感、剥夺感、无法掌控生活，拒绝与外界交流", "vlm_prompt_tags": ["no arms","no legs","blank face","missing features"] },
+      "M13_damaged_roots": { "name": "根基受损/断裂", "description": "画出的树木根部断裂、暴露在空气中，或树干有巨大的树洞、伤疤", "clinical_focus": "HTP中典型的早年创伤投射，家庭根基不稳，缺乏母性滋养", "vlm_prompt_tags": ["exposed roots","broken tree trunk","tree hole","tree scar"] },
+      "M14_falling_objects": { "name": "坠落中的物体", "description": "从高空掉落的物品、人或流星，缺乏支撑", "clinical_focus": "失控感、极度的焦虑、害怕失败或被抛弃", "vlm_prompt_tags": ["falling down","dropping objects","falling person","meteor"] },
+      "M15_nourishing_symbols": { "name": "抚育/滋养象征物", "description": "刻意描绘的食物（苹果、蛋糕）、乳房形状、温暖的火炉、正在喂食的鸟", "clinical_focus": "退行心理，极度渴望母爱、口欲期未满足的补偿性表达", "vlm_prompt_tags": ["food","feeding","fireplace","apple","cake"] },
+      "M16_masked_figures": { "name": "面具/伪装人物", "description": "人物戴着面具、厚重的头盔，或被小丑装扮掩盖真实面容", "clinical_focus": "伪装自我、隐藏真实情绪（如强颜欢笑）、人际交往中的深度不信任", "vlm_prompt_tags": ["wearing mask","clown face","helmet hiding face","disguise"] },
+      "M17_shattered_objects": { "name": "碎裂的物品", "description": "打破的镜子、裂开的花瓶、四分五裂的房屋", "clinical_focus": "自我同一性破裂、遭遇重大生活变故（如父母离异）的创伤后反应", "vlm_prompt_tags": ["broken glass","shattered vase","cracked object","split house"] },
+      "M18_clinging_figures": { "name": "攀附/挂靠人物", "description": "小人死死抱住大人的腿、挂在树上或紧抓边缘", "clinical_focus": "极度依赖、分离焦虑导致的退行行为、害怕被独立留在某处", "vlm_prompt_tags": ["clinging to leg","hanging on","grabbing tightly"] },
+      "M19_shadow_entities": { "name": "暗影/剪影实体", "description": "完全涂黑的人影或怪物影子，没有具体细节", "clinical_focus": "内心未知的恐惧、被压抑的潜意识内容、挥之不去的阴影感", "vlm_prompt_tags": ["black silhouette","shadow figure","dark entity"] },
+      "M20_repetitive_minutiae": { "name": "密集重复微小物", "description": "画满了一模一样的极小的星星、花朵、硬币，铺满画面", "clinical_focus": "强迫症倾向、通过无意义的重复填补内心极度的空虚和无聊", "vlm_prompt_tags": ["many tiny stars","repetitive small flowers","filled with dots"] }
+    },
+    "color_features_颜色特征": {
+      "C01_monochrome_dark": { "name": "单一压抑暗色", "description": "大面积使用黑色、深灰、暗蓝，排斥暖色", "clinical_focus": "情绪低落、抑郁倾向、生命力抑制", "vlm_prompt_tags": ["monochrome","dark colors","mostly black","grey scale"] },
+      "C02_high_contrast_aggressive": { "name": "强对比攻击色", "description": "红与黑的突兀交织，高饱和度对比", "clinical_focus": "强烈的愤怒、冲动控制障碍、危险预警", "vlm_prompt_tags": ["red and black","high contrast","harsh colors","aggressive palette"] },
+      "C03_faint_transparent": { "name": "微弱透明色", "description": "颜色极淡，下笔极轻，视觉上几乎隐形", "clinical_focus": "心理能量衰竭、极度不自信、恐惧存在感", "vlm_prompt_tags": ["faint lines","transparent color","very light shading","barely visible"] },
+      "C04_chaotic_muddy": { "name": "混沌泥泞色", "description": "无序叠加导致颜色脏污（如褐色、灰黑）", "clinical_focus": "内心秩序混乱、深层焦虑、对现状感到无望和失控", "vlm_prompt_tags": ["muddy color","mixed dark brown","dirty colors","chaotic mixing"] },
+      "C05_sudden_focal_color": { "name": "突发聚焦色", "description": "画面平淡，局部突然使用极浓烈的红色或异色涂抹", "clinical_focus": "特定心理创伤点的暴露，压抑情绪的突然爆发口", "vlm_prompt_tags": ["sudden red spot","focal intense color","out of place saturated spot"] },
+      "C06_outline_only_avoidance": { "name": "纯线稿拒涂色", "description": "拒绝在轮廓内填色，画面冷清留白", "clinical_focus": "情感隔离，拒绝表露真实感受，高防御状态", "vlm_prompt_tags": ["outline only","uncolored drawing","empty shapes","blank inside"] },
+      "C07_toxic_neon": { "name": "毒性荧光色", "description": "过度使用极其刺眼的荧光色（亮绿、亮粉），缺乏过渡", "clinical_focus": "过度刺激、狂躁防御，可能是在掩饰极度的悲伤（强颜欢笑）", "vlm_prompt_tags": ["neon green","hot pink","clashing bright colors","overstimulated palette"] },
+      "C08_cold_dominance": { "name": "极寒冷色调", "description": "画面被深蓝、青色、紫罗兰色统治", "clinical_focus": "深度忧郁、孤独感、人际关系的冰冷体验", "vlm_prompt_tags": ["all blue","cold colors","cyan dominant","icy palette"] },
+      "C09_inappropriate_color": { "name": "错乱/反常色彩", "description": "违背常理的用色，如绿色的太阳、红色的树干、黑色的太阳", "clinical_focus": "现实感受损、强烈的叛逆心理或处于极端情绪体验中", "vlm_prompt_tags": ["black sun","green sky","red tree trunk","unnatural colors"] },
+      "C10_color_bleeding": { "name": "色彩溢出/流淌", "description": "颜色大面积涂出轮廓线之外，或者表现出流淌的质感", "clinical_focus": "缺乏边界感、自我控制力差、情绪容易泛滥或失控", "vlm_prompt_tags": ["color outside lines","bleeding colors","messy coloring","spilled paint look"] },
+      "C11_strict_compartmentalization": { "name": "严格色块隔离", "description": "将不同颜色极其规整地填在不同的格子里，绝对不互相融合", "clinical_focus": "强迫性防御机制、极度害怕混乱、需要绝对的秩序来维持安全感", "vlm_prompt_tags": ["color-blocked","staying strictly inside lines","compartmentalized colors"] },
+      "C12_absence_of_ground_color": { "name": "大地色缺失", "description": "画面中拒绝使用任何棕色、土黄等大地色系，感觉悬浮", "clinical_focus": "缺乏现实感、没有根基、与原生家庭或现实生活脱节", "vlm_prompt_tags": ["no brown","no earth tones","lacking ground color"] },
+      "C13_faded_warmth": { "name": "褪色的暖色", "description": "曾经使用了红色/黄色，但被橡皮擦掉或用白色/灰色覆盖，显得灰暗", "clinical_focus": "曾经有过希望或温暖，但目前正在消退，进入绝望或抑郁前期", "vlm_prompt_tags": ["faded yellow","washed out red","grey over warm colors"] },
+      "C14_metallic_robotic": { "name": "金属/机械色调", "description": "大量使用银色、灰色、铁锈色，缺乏生命力的色彩", "clinical_focus": "情感麻木、人格解体感、如同机器般应对生活的高压", "vlm_prompt_tags": ["metallic colors","silver","rust color","industrial palette"] },
+      "C15_clashing_complementary": { "name": "刺眼互补色冲突", "description": "大面积使用红绿、黄紫等互补色紧挨在一起，产生强烈的视觉震颤感", "clinical_focus": "内心存在极其激烈的两种价值观或情绪的撕扯（如对父母既爱又恨）", "vlm_prompt_tags": ["red and green together","yellow and purple clashing","vibrating colors"] }
+    },
+    "line_features_线条特征": {
+      "L01_heavy_destructive": { "name": "重压破坏线", "description": "力度极大，划破纸张，发泄式乱涂", "clinical_focus": "愤怒宣泄、对环境的攻击性、情绪决堤", "vlm_prompt_tags": ["heavy pressure","torn paper","deep indentations","aggressive strokes"] },
+      "L02_overwritten_anxious": { "name": "反复描摹焦虑线", "description": "在同一轮廓上死死刻画几十遍", "clinical_focus": "重度焦虑、强迫症倾向、对不确定性的极度恐慌", "vlm_prompt_tags": ["overwritten lines","traced multiple times","thick black outlines","obsessive tracing"] },
+      "L03_faint_broken": { "name": "微弱断续线", "description": "纤细无力，断续犹豫", "clinical_focus": "自卑、犹豫不决、缺乏安全感和心理支撑", "vlm_prompt_tags": ["dashed lines","broken strokes","hesitant drawing","faint pencil"] },
+      "L04_rigid_grid": { "name": "刻板网格/直线", "description": "像尺子画出的僵硬直线或密集铁丝网", "clinical_focus": "自我设限、僵化的防御机制、缺乏情感流动", "vlm_prompt_tags": ["grid lines","ruler straight","rigid pattern","jail bars"] },
+      "L05_sharp_spiky": { "name": "尖锐乱刺线", "description": "心电图波峰状，频繁折返的尖刺", "clinical_focus": "敌意、极强的防备心理、随时准备反击（刺猬心态）", "vlm_prompt_tags": ["spiky lines","zigzag pattern","thorn-like strokes","sharp scribbles"] },
+      "L06_trembling_hesitant": { "name": "颤抖退缩线", "description": "线条呈现波浪状或锯齿状微小颤动", "clinical_focus": "深层恐惧、极度缺乏自信、可能是神经系统发育受压力的躯体化表现", "vlm_prompt_tags": ["trembling lines","shaky strokes","wavy weak lines","unstable drawing"] },
+      "L07_tangled_yarn": { "name": "毛线团纠缠线", "description": "线条连贯但像乱麻般打结绕圈，无起点终点", "clinical_focus": "思维混乱、无法理清的复杂情绪、找不到出路和解法", "vlm_prompt_tags": ["tangled lines","yarn ball scribble","circular mess","knotted lines"] },
+      "L08_erratic_pressure": { "name": "失控变压线", "description": "同一根线条忽轻忽重，极不均匀", "clinical_focus": "情绪极度不稳定，冲动与抑制在内心剧烈交战", "vlm_prompt_tags": ["variable pressure","thick and thin alternating","erratic strokes"] },
+      "L09_sketchy_discontinuous": { "name": "草图式拼凑线", "description": "由无数短小、杂乱的线条拼凑出一条长线，缺乏一气呵成的流畅感", "clinical_focus": "极度焦虑、缺乏承诺感、不敢下结论、逃避现实", "vlm_prompt_tags": ["sketchy lines","feathered strokes","hairy lines"] },
+      "L10_perfect_slow": { "name": "过度完美缓慢线", "description": "线条极其圆滑完美，无一处毛糙，看起来画得非常慢且谨慎", "clinical_focus": "完美主义、对犯错有极度的恐惧、家教可能过于严苛", "vlm_prompt_tags": ["perfectly smooth lines","slowly drawn","overly neat"] },
+      "L11_sweeping_uncontrolled": { "name": "狂扫失控线", "description": "大开大合、完全飞出画面的长弧线，不受画框限制", "clinical_focus": "躁狂倾向、多动/冲动控制困难、渴望摆脱所有束缚", "vlm_prompt_tags": ["sweeping strokes","large arcs","out of control lines"] },
+      "L12_erased_corrected": { "name": "反复擦除修正线", "description": "留下了大量使用橡皮擦拭的痕迹，纸面变脏变破", "clinical_focus": "强烈的自我否定、对自我表现永不满意、深层自卑", "vlm_prompt_tags": ["erased areas","smudged graphite","correction marks"] },
+      "L13_fluid_weak": { "name": "流线妥协线", "description": "线条像水波一样柔软顺滑，但毫无力度，轻易转向", "clinical_focus": "讨好型人格、顺从、缺乏自我主张、在关系中处于弱势", "vlm_prompt_tags": ["fluid lines","weak curves","soft wavy lines"] },
+      "L14_right_angle_defense": { "name": "直角防御线", "description": "刻意多用90度直角折线，拒绝圆滑的过渡", "clinical_focus": "男性化防御机制、固执、拒绝妥协或接受他人意见", "vlm_prompt_tags": ["right angles","boxy lines","sharp corners"] },
+      "L15_rhythmic_looping": { "name": "节奏性循环圈线", "description": "画满了一串串像弹簧一样的连续圆圈，富有机械的节奏感", "clinical_focus": "自我安抚行为、退行、或自闭谱系障碍中的刻板行为", "vlm_prompt_tags": ["looping lines","spring-like coils","continuous loops"] }
+    },
+    "shape_features_形状特征": {
+      "S01_sharp_angular": { "name": "尖锐棱角形", "description": "大量锐角、多边形、刀片/闪电状图形", "clinical_focus": "内心冲突、批判性强、用攻击性掩饰脆弱", "vlm_prompt_tags": ["sharp angles","triangles","lightning shapes","blade-like"] },
+      "S02_tight_spiral": { "name": "紧密螺旋漩涡", "description": "一笔到底的蚊香/龙卷风状，中心极黑", "clinical_focus": "深陷负面情绪的漩涡、强烈的窒息感与眩晕感", "vlm_prompt_tags": ["tight spiral","vortex","tornado shape","dense center"] },
+      "S03_closed_encapsulated": { "name": "包裹封锁形", "description": "用重重的圈或方框将某物完全框死", "clinical_focus": "画地为牢、隔绝外界伤害、极度缺乏安全感下的自我孤立", "vlm_prompt_tags": ["encapsulated shape","drawn inside a box","thick circle around object"] },
+      "S04_open_fragmented": { "name": "开放破损碎片", "description": "线条未闭合，图形像碎玻璃或散落拼图", "clinical_focus": "自我统合失败、破碎的家庭结构投射、丧失整体感", "vlm_prompt_tags": ["fragmented shapes","open contours","scattered pieces","broken glass shape"] },
+      "S05_tiny_stippling": { "name": "微小斑点雨滴", "description": "用笔尖点出密密麻麻的小点/短线", "clinical_focus": "无声的哭泣、琐碎的焦虑感、躯体化症状（如失眠、头痛）的投射", "vlm_prompt_tags": ["stippling","dotting pattern","tiny dashes","dense dots"] },
+      "S06_amorphous_melting": { "name": "融化瘫软不定形", "description": "像泥浆或融化冰淇淋般缺乏支撑的形状", "clinical_focus": "心理防线崩溃、极度疲惫、放弃抵抗现实困境", "vlm_prompt_tags": ["melting shape","puddle-like","formless blob","slumping figures"] },
+      "S07_overlapping_crowded": { "name": "重叠拥挤形", "description": "图形互相无理交叠，没有空间透视的挤压", "clinical_focus": "边界感被侵犯、极度窒息的现实环境、心理空间被严重挤压", "vlm_prompt_tags": ["overlapping shapes","crowded canvas","figures drawn on top of each other"] },
+      "S08_concentric_targets": { "name": "同心圆靶标", "description": "一圈套一圈的同心圆，像一个靶子", "clinical_focus": "感觉自己被针对（被霸凌）、或者是极度以自我为中心的退缩防御", "vlm_prompt_tags": ["concentric circles","target shape","bullseye doodle"] },
+      "S09_hollow_empty": { "name": "空心/中空形状", "description": "画了很大的轮廓，但中间完全留白，像空壳", "clinical_focus": "内心的极度空虚感、外表强大但内在脆弱、自恋型防御", "vlm_prompt_tags": ["hollow shapes","empty outlines","large blank shapes"] },
+      "S10_excessive_symmetry": { "name": "极度对称形", "description": "左右如同镜像般完全一致，甚至使用工具辅助", "clinical_focus": "对环境失去控制感，故而通过强迫性的对称来恢复内在秩序", "vlm_prompt_tags": ["perfect symmetry","mirrored halves","geometrically centered"] },
+      "S11_asymmetrical_lopsided": { "name": "畸形不对称形", "description": "明显应该对称的事物（如眼睛、房子）画得极度歪斜", "clinical_focus": "心理失衡、强烈的神经质倾向或遭遇重大心理打击后的失常", "vlm_prompt_tags": ["lopsided shape","asymmetrical","distorted proportions"] },
+      "S12_elongated_stretched": { "name": "拉长伸展形", "description": "树干极高、人物身体像竹竿一样被拉长", "clinical_focus": "过度渴望成长、脱离现实的幻想、或者感觉被现实撕扯", "vlm_prompt_tags": ["elongated figures","stretched shapes","unusually tall"] },
+      "S13_squashed_compressed": { "name": "压扁压缩形", "description": "事物如同被重物砸扁，又矮又宽", "clinical_focus": "强烈的压迫感、承受了与其年龄不符的重担、压抑自我", "vlm_prompt_tags": ["squashed shape","compressed vertically","flattened figures"] },
+      "S14_pointed_phallic": { "name": "锐角刺突形", "description": "像长矛、尖塔一样直刺上方的形状", "clinical_focus": "追求权力与控制、攻击性驱力强、对权威的反抗", "vlm_prompt_tags": ["pointed upwards","spear-like","tall spikes"] },
+      "S15_cocoon_womb": { "name": "蚕茧/子宫包容形", "description": "柔软的、封闭的椭圆形包裹着里面的事物", "clinical_focus": "终极的退行防御，渴望回到母体般绝对安全、免受伤害的境界", "vlm_prompt_tags": ["cocoon shape","egg-like enclosure","womb shape"] }
+    },
+    "spatial_features_位置特征": {
+      "P01_corner_retreat": { "name": "角落退缩", "description": "集中在边缘角落（常为左下/右下），留白超80%", "clinical_focus": "严重的自我边缘化、自卑、恐惧占据资源和空间", "vlm_prompt_tags": ["drawn in corner","massive whitespace","tiny in corner","bottom left focus"] },
+      "P02_bottom_heavy": { "name": "底部沉淀", "description": "紧贴底边，仿佛被重力压制，上方空旷", "clinical_focus": "现实压力过大、心境抑郁、对生存底线（托底）的极度依赖", "vlm_prompt_tags": ["bottom edge drawing","heavy at bottom","empty top half"] },
+      "P03_top_floating": { "name": "顶端悬空漂浮", "description": "挤在上边沿，下方完全腾空，无地平线", "clinical_focus": "脱离现实的幻想防御、缺乏安全稳固的根基（无家可归感）", "vlm_prompt_tags": ["floating at top","no ground line","suspended drawing"] },
+      "P04_center_isolated": { "name": "中心孤立", "description": "体积极小但突兀地放在正中央，四周无陪伴", "clinical_focus": "极度的孤独感、渴望被关注但又害怕受伤的矛盾中心", "vlm_prompt_tags": ["tiny in exact center","isolated in middle","surrounded by void"] },
+      "P05_compartmentalized": { "name": "区域隔离切割", "description": "用长线或折痕将画纸强行切割成互不相通的格子", "clinical_focus": "情感隔离防御机制，家庭关系的严重割裂感", "vlm_prompt_tags": ["paper divided by lines","grid compartments","isolated boxes"] },
+      "P06_covered_hidden": { "name": "局部掩盖暗区", "description": "特定区域被集中涂黑，与周围空白形成对比", "clinical_focus": "潜意识试图藏匿的创伤记忆或羞耻点", "vlm_prompt_tags": ["darkened patch","blacked out area","local heavy shading"] },
+      "P07_left_oriented": { "name": "极左倾向", "description": "所有元素都偏向画纸左侧，右侧空白", "clinical_focus": "沉溺于过去的美好（如父母未外出打工前）、退行心理、对母亲的深度依恋", "vlm_prompt_tags": ["left side drawing","empty right side","facing left"] },
+      "P08_right_oriented": { "name": "极右倾向", "description": "所有元素偏向右侧，或人物奋力向右", "clinical_focus": "急于逃离现在的环境、对未知的未来感到焦虑或盲目憧憬（父亲象征）", "vlm_prompt_tags": ["right side drawing","empty left side","facing right"] },
+      "P09_edge_hugging": { "name": "纸张边缘依附", "description": "画作完全贴着画纸的物理边缘进行，不敢画在纸张中间", "clinical_focus": "极度缺乏安全感，需要物理边界作为依靠，胆怯、不敢面对广阔空间", "vlm_prompt_tags": ["hugging the edge","drawn along border","touching paper edge"] },
+      "P10_scattered_chaotic": { "name": "满天星式散乱", "description": "元素毫无逻辑地散布在整张纸上，没有主次之分", "clinical_focus": "注意力缺陷、极度无序的家庭环境投射、缺乏生活目标", "vlm_prompt_tags": ["scattered randomly","no central focus","disorganized layout"] },
+      "P11_baseline_dependency": { "name": "基线极度依赖", "description": "先画一条极粗的底线（地平线），所有东西都死死长在这条线上", "clinical_focus": "基础安全感缺失，必须通过人为制造一个“底座”来对抗坠落的恐惧", "vlm_prompt_tags": ["thick ground line","heavy baseline","everything on one line"] },
+      "P12_micro_macro_distortion": { "name": "主次比例畸变", "description": "重要的人物（如父母）画得像蚂蚁，不重要的东西（如路边的石头）占据半幅画", "clinical_focus": "认知扭曲、现实感崩塌、或者通过贬低重要他人来进行防御", "vlm_prompt_tags": ["distorted perspective","tiny people giant objects","macro micro mismatch"] },
+      "P13_split_canvas": { "name": "天地割裂", "description": "画面上方和下方分别画了完全不相干的内容，中间大段空白", "clinical_focus": "理想与现实的严重撕裂、或者身心解离（无法将想法付诸实践）", "vlm_prompt_tags": ["split top and bottom","empty middle","disconnected scenes"] },
+      "P14_spilling_off_page": { "name": "溢出画框外", "description": "物体画得太大，以至于纸张装不下被切断", "clinical_focus": "自我膨胀、冲动控制极差、或者当前的情绪容量已经溢出", "vlm_prompt_tags": ["cropped at edges","too big for paper","spilling off page"] },
+      "P15_drawn_borders": { "name": "画地为牢画框", "description": "在画纸的四周人为地再画一个边框，把所有内容关在里面", "clinical_focus": "强烈的自我约束、害怕外界环境的不可控、需要极强的容器感", "vlm_prompt_tags": ["drawn border around canvas","framed drawing","boxed in scene"] }
+    },
+    "interaction_dynamics_交互与动力特征": {
+      "I01_physical_barriers": { "name": "物理阻隔断联", "description": "人物或主体之间被墙壁、河流、长线、家具生硬隔开", "clinical_focus": "KFD核心诊断，家庭成员间缺乏沟通，存在不可逾越的心理鸿沟", "vlm_prompt_tags": ["line between figures","wall separating people","blocked interaction"] },
+      "I02_backs_turned": { "name": "背对无交集", "description": "画面中的人物或主体互相背对，没有任何眼神和动作交流", "clinical_focus": "情感冷漠、拒绝沟通、在同一屋檐下却形同陌路的现实投射", "vlm_prompt_tags": ["facing away from each other","no eye contact","backs turned"] },
+      "I03_extreme_disproportion": { "name": "极端比例失衡", "description": "代表权威的形象（如怪兽或大人）极其巨大，而代表自己的形象如蚂蚁般微小", "clinical_focus": "极度的无力感、感知到外界环境或监护人具有压倒性的威胁", "vlm_prompt_tags": ["giant figure next to tiny figure","extreme size difference"] },
+      "I04_weaponized_interaction": { "name": "武器化交互", "description": "主体之间有明确的攻击动作，如扔东西、射击、撕咬", "clinical_focus": "处于敌对环境（家庭暴力、校园霸凌），或内心压抑了强烈的报复冲动", "vlm_prompt_tags": ["throwing object at someone","shooting","attacking figure"] },
+      "I05_reaching_unmet": { "name": "伸手未及", "description": "人物伸出手臂渴望触碰某人/某物，但中间隔着大段空白或无法触及", "clinical_focus": "极度渴望父母的关爱和拥抱，但现实中屡屡落空，强烈的失落感", "vlm_prompt_tags": ["reaching out","hands not touching","stretching arms across space"] },
+      "I06_encircling_trapping": { "name": "缠绕/圈禁他人", "description": "画出一个人物/物体将另一个人物紧紧包裹或圈在里面", "clinical_focus": "过度保护、控制狂倾向的家庭环境、令人窒息的爱", "vlm_prompt_tags": ["figure trapped inside another","encircling someone","smothering hold"] },
+      "I07_omission_of_self": { "name": "自我形象抹除", "description": "在要求画“我的家庭”或相关主题时，画了所有人唯独没有画自己", "clinical_focus": "极度的自我否定、认为自己在家中是多余的、彻底的透明人心理", "vlm_prompt_tags": ["missing self figure","family drawing without child"] },
+      "I08_omission_of_caregiver": { "name": "主要抚养者抹除", "description": "刻意不画父亲或母亲，或者用一个极小的符号替代", "clinical_focus": "对该角色的极度愤怒、拒绝接纳该角色、或逃避与其相关的创伤", "vlm_prompt_tags": ["missing mother","missing father","erased parent"] },
+      "I09_fused_figures": { "name": "连体/融合人物", "description": "人物的身体边缘互相融合，共用肢体或紧紧贴在一起没有缝隙", "clinical_focus": "缺乏个体边界、共生性依恋（病态依赖）、未完成心理断乳", "vlm_prompt_tags": ["figures joined together","sharing limbs","fused bodies"] },
+      "I10_elevated_authority": { "name": "高空悬浮权威", "description": "将父母或老师画在画面的极高处，像上帝一样俯视自己", "clinical_focus": "对权威极度的畏惧、感受到被时刻监视、缺乏平等的沟通环境", "vlm_prompt_tags": ["figure floating high","looking down from above","towering authority"] },
+      "I11_shadowing_following": { "name": "影子般跟随", "description": "一个人物总是重叠在另一个人物的后面，像影子一样", "clinical_focus": "极度缺乏独立性、必须依附于他人才能生存、没有自己的主见", "vlm_prompt_tags": ["standing directly behind","shadowing figure","peeking from behind"] },
+      "I12_chaotic_no_narrative": { "name": "无叙事性乱象", "description": "人物之间各做各的，动作互不相关甚至互相矛盾，画面极度混乱", "clinical_focus": "原生家庭内部运作混乱、缺乏共同目标和凝聚力、极高焦虑", "vlm_prompt_tags": ["unrelated actions","chaotic scene","no central theme"] },
+      "I13_gazing_off_page": { "name": "凝视画外", "description": "所有人物都没有看着彼此，而是齐刷刷地盯着画纸外面的某个远方", "clinical_focus": "留守儿童典型特征：期盼远方打工的父母归来，灵魂不在当下", "vlm_prompt_tags": ["looking off page","staring into distance","ignored foreground"] },
+      "I14_protective_shielding": { "name": "保护/遮挡他人", "description": "自己张开双臂挡在弟弟妹妹前面，或者撑起一把大伞", "clinical_focus": "“儿童成人化”（Parentified child），过早承担家庭责任，压抑了自己的童真", "vlm_prompt_tags": ["shielding someone","holding umbrella over others","protective stance"] },
+      "I15_line_of_sight_blocking": { "name": "视线物理阻断", "description": "人物的眼睛前面被电视机、报纸、树叶等物品完全遮挡", "clinical_focus": "拒绝看清现实、逃避家庭矛盾、冷暴力环境下的视而不见", "vlm_prompt_tags": ["face hidden behind object","reading newspaper hiding face","blocked vision"] }
+    },
+    "details_and_symbolism_细节与象征特征": {
+      "D01_obsessive_shading": { "name": "强迫性重度阴影", "description": "在某个极小的局部（如树根、云朵）用铅笔死死涂满浓重的阴影", "clinical_focus": "局部的高度焦虑和固着，常与该部位的隐喻相关（如生殖器焦虑或深层恐惧）", "vlm_prompt_tags": ["heavy shading","darkly filled areas","obsessive coloring"] },
+      "D02_stick_figures": { "name": "火柴人敷衍", "description": "完全有能力画出细节的年龄，却只画最简单的线条火柴人", "clinical_focus": "防御性敷衍、逃避测验、或者抑郁导致的心理能量耗尽（懒得画）", "vlm_prompt_tags": ["stick figures","no body details","minimalist drawing"] },
+      "D03_mouth_teeth_emphasis": { "name": "强调嘴巴/牙齿", "description": "嘴巴画得极大、涂黑，或者露出极其锋利的牙齿", "clinical_focus": "言语攻击性强、经常被言语辱骂、或者口欲期极度不满", "vlm_prompt_tags": ["large mouth","sharp teeth","blackened mouth","showing teeth"] },
+      "D04_eye_emphasis_paranoia": { "name": "巨大/空洞的眼睛", "description": "眼睛占了脸部一半以上，瞳孔极小（惊恐）或全黑（偏执）", "clinical_focus": "强烈的被迫害妄想、过度警觉（Hypervigilance）、时刻感到被监视或威胁", "vlm_prompt_tags": ["giant eyes","staring eyes","tiny pupils","paranoid gaze"] },
+      "D05_hidden_hands": { "name": "隐藏的双手", "description": "手插在口袋里、背在身后，或者直接画到纸张外面", "clinical_focus": "强烈的内疚感、负罪感、隐瞒秘密、或者手淫焦虑", "vlm_prompt_tags": ["hands in pockets","hands behind back","hands cut off by paper edge"] },
+      "D06_multiple_ground_lines": { "name": "多重地平线", "description": "画面上出现了好几条错乱的底线，房子和树长在不同的线上", "clinical_focus": "生活环境剧烈动荡、频繁更换抚养人（如从外婆家换到奶奶家），极度不稳定", "vlm_prompt_tags": ["multiple ground lines","floating baselines","inconsistent ground"] },
+      "D07_mixed_weather": { "name": "矛盾天气", "description": "同一幅画里既有大太阳，又有下雨甚至下雪", "clinical_focus": "极度矛盾的情感体验，家庭氛围阴晴不定，孩子不知所措", "vlm_prompt_tags": ["sun and rain together","mixed weather","conflicting sky"] },
+      "D08_locks_and_chains": { "name": "锁链/钥匙孔", "description": "极其仔细地画出房门的钥匙孔、或者人物身上带有锁链", "clinical_focus": "绝对的保密心理、强烈的限制感、或者有被迫禁闭的创伤经历", "vlm_prompt_tags": ["keyhole","padlock","chains","shackles"] },
+      "D09_wounds_bandages": { "name": "伤口与创可贴", "description": "人物或树干上画有滴血的伤口、缝合线或大块的创可贴", "clinical_focus": "直接的心理或躯体创伤求救信号，带有自伤倾向或者刚经历重大痛苦", "vlm_prompt_tags": ["band-aid","scar","stitches","bleeding wound"] },
+      "D10_buttons_obsessive": { "name": "密集纽扣", "description": "衣服上画了一排极其整齐、数量众多的纽扣，并涂黑", "clinical_focus": "躯体依恋、婴儿期的退行、或者对母爱关怀（衣服包裹）的强迫性渴求", "vlm_prompt_tags": ["row of buttons","detailed clothing buttons","many buttons"] }
+    }
+  },
+  "emotion_and_tone_mapping_情绪基调与干预映射": [
+    {
+      "rule_id": "INTERVENTION_L1_POSITIVE_RESILIENCE",
+      "rule_name": "正常状态/心理弹性良好",
+      "target_combinations": ["未触发中高危组合，且色彩包含暖色，线条流畅，空间分布均匀"],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["情绪稳定","安全感尚可","自我表达畅通"],
+        "clinical_interpretation": "孩子当前心理能量充足，并未显示出明显的病理性防御或创伤投射。绘画行为本身起到了良好的自我娱乐作用。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "欢快探索、奇思妙想",
+        "tone_guidelines": "全力支持孩子的想象力！故事基调轻快、充满冒险精神。可以引入有趣的伙伴和充满色彩的奇幻场景，鼓励主动探索。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": false,
+        "urgency_level": "Low (Level 1)",
+        "intervention_directive": "系统正常推送【互动点赞】。建议家长发送带有‘开心/赞赏’属性的魔法道具（如：彩虹糖果雨），语音以夸奖孩子的创造力为主。"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L2_LONELINESS_SEEKING",
+      "rule_name": "轻度孤独与寻求关注",
+      "target_combinations": [{"subject":"M09_surrogate_comfort","color":"C08_cold_dominance"},{"spatial":"P04_center_isolated","line":"L03_faint_broken"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["孤独感","渴望陪伴","轻度失落","情感转移"],
+        "clinical_interpretation": "孩子处于独处时的轻度失落状态，将情感寄托于宠物或玩具。画面中心孤立显示出他们渴望成为被关注的中心，但现实中缺乏回应。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "温暖陪伴、呼唤回应",
+        "tone_guidelines": "故事应侧重于‘有求必应’。当主角发出微小的声音时，环境（森林、星空）应当立即给予温柔的回声。安排一个忠诚的伴随型NPC全程跟随。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "Moderate (Level 2)",
+        "intervention_directive": "推送【陪伴需求提醒】。建议家长发送【回声海螺】或【分身小熊】，语音内容重在回应：“宝贝，爸爸/妈妈听到你的声音了，我们一直在陪着你。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L3_SEPARATION_ANXIETY",
+      "rule_name": "中度分离焦虑与关系断裂感",
+      "target_combinations": [{"subject":"M08_transportation_away","interaction":"I05_reaching_unmet"},{"interaction":"I01_physical_barriers","shape":"S04_open_fragmented","color":"C04_chaotic_muddy"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["分离焦虑","依恋关系受损","无力挽留","内心破碎感"],
+        "clinical_interpretation": "典型的因父母长期异地打工引发的分离创伤。离去的交通工具和伸出的手代表无力的挽留，物理阻隔线则投射出孩子认为家庭关系已被时空切断。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "跨越时空、缝合连接",
+        "tone_guidelines": "故事的核心主线必须是‘无论多远都能连在一起’。引入类似‘风筝线’、‘光之桥’或‘云端邮局’的概念。强调分离只是暂时的，连接是绝对牢固的。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "High (Level 3)",
+        "intervention_directive": "推送【依恋修复预警】。极力建议家长发送【时空任意门】或【牵手红绳】。语音必须极其确信：“就算相隔一万座山，爸爸妈妈的心也永远和你绑在一起，绝不会断开。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L3_DEFENSIVE_HOSTILITY",
+      "rule_name": "中度防卫与攻击性释放",
+      "target_combinations": [{"subject":"M01_aggressive_objects","color":"C02_high_contrast_aggressive","line":"L01_heavy_destructive"},{"line":"L05_sharp_spiky","shape":"S01_sharp_angular"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["高防备","愤怒宣泄","受挫后的攻击","情绪失控边缘"],
+        "clinical_interpretation": "孩子在现实中遭遇了不公、欺凌或强烈的挫败感，积压的愤怒转化为纸面上的破坏力。尖锐形状和重压线是典型的‘刺猬防御’机制。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "包容破坏、安全释压",
+        "tone_guidelines": "绝不可在故事中进行道德说教或惩罚主角！创造一个‘允许被摧毁且能自我修复’的世界（如橡皮泥王国、无尽的软垫迷宫）。让主角的破坏力得到安全的吸收与接纳。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "High (Level 3)",
+        "intervention_directive": "推送【情绪排气阀提醒】。明确告知家长孩子正处于暴躁期，切勿指责。建议发送【吃气怪兽】或【大声公】。语音：“遇到不爽的事情就要发泄出来，爸爸妈妈接纳你所有的坏脾气。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L3_PARENTIFIED_CHILD",
+      "rule_name": "过早成熟/儿童成人化防御",
+      "target_combinations": [{"interaction":"I14_protective_shielding","shape":"S10_excessive_symmetry"},{"subject":"M15_nourishing_symbols","color":"C11_strict_compartmentalization"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["被迫懂事","压抑自我需求","过度承担","隐性委屈"],
+        "clinical_interpretation": "留守儿童经常被迫成为照顾弟妹的“小大人”。过度保护他人的姿态、强迫性的对称和对食物的描绘，说明他们压抑了自己作为孩子的脆弱，强撑起大人的角色。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "卸下重担、允许脆弱",
+        "tone_guidelines": "主角不需要再拯救任何人！故事应当剥夺主角的责任感，送ta去一个‘只能当小孩的游乐园’。强调在这里不需要照顾别人，可以尽情任性、犯错。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "High (Level 3)",
+        "intervention_directive": "向家长推送【过度懂事心疼提醒】。家长切忌夸赞孩子“你真懂事”。建议发送【偷懒沙发】或【糖果奶瓶】。语音：“今天不用管弟弟妹妹了，在爸爸妈妈眼里，你永远是个需要被我们宠爱的小孩。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L4_ANXIETY_COMPULSION",
+      "rule_name": "高危重度焦虑与被困感",
+      "target_combinations": [{"subject":"M02_trapped_isolated_figures","shape":"S02_tight_spiral","line":"L02_overwritten_anxious"},{"line":"L04_rigid_grid","shape":"S03_closed_encapsulated","spatial":"P05_compartmentalized"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["重度焦虑","强迫控制","极度窒息","绝望受困"],
+        "clinical_interpretation": "反复死死描摹、画密集网格和包裹框，表明儿童心理处于濒临崩溃的边缘，试图通过极端的刻板行为来找回一丝控制感。感觉自己被现实牢牢困死。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "融化坚冰、温和松绑",
+        "tone_guidelines": "切忌设计解谜或高压任务。故事环境需要像温水一样慢慢融化主角周围的冰墙。提供一种‘不费力就能获得自由’的设定（如钥匙自己长出了翅膀飞到手里），缓解控制焦虑。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "Highest (Level 4)",
+        "intervention_directive": "推送【高压松绑紧急干预】。孩子心理弹性已达极限，家长需提供免责声明式的关爱。发送【万能融化喷雾】。语音：“别把自己逼得太紧，做不好也没关系，天塌下来有爸爸妈妈顶着。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L4_PARANOIA_HYPERVIGILANCE",
+      "rule_name": "高危偏执与极度警觉",
+      "target_combinations": [{"detail":"D04_eye_emphasis_paranoia","spatial":"P15_drawn_borders"},{"subject":"M11_head_emphasis","color":"C15_clashing_complementary","line":"L05_sharp_spiky"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["被害妄想倾向","极度不安全","草木皆兵","人际极度不信任"],
+        "clinical_interpretation": "极其夸张的凝视之眼、人为画框和刺眼色彩的结合，说明孩子可能处于恶劣的生存环境（如经常被训斥、怀疑被针对），神经系统处于持续的“战斗或逃跑”警觉状态。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "解除武装、绝对屏蔽",
+        "tone_guidelines": "故事中不能出现任何‘监视者’或‘考验’。必须为主角提供一件【绝对隐身衣】或进入一个【没有任何人能进来的保险库】。强调外界的目光和声音已经被完全切断了。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "Highest (Level 4)",
+        "intervention_directive": "触发【高危警觉状态预警】。家长必须提供毫无保留的信任。发送【魔法隐形斗篷】。语音不可带有任何质问语气：“不管别人说什么，爸爸妈妈永远无条件相信你、站在你这边。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L4_DEPRESSION_ENERGY_LOSS",
+      "rule_name": "高危抑郁倾向与能量衰竭",
+      "target_combinations": [{"subject":"M03_fading_fragile_life","color":"C03_faint_transparent","spatial":"P01_corner_retreat"},{"color":"C01_monochrome_dark","shape":"S06_amorphous_melting","spatial":"P02_bottom_heavy"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["生命力枯竭","重度心境低落","透明人综合征","放弃抵抗"],
+        "clinical_interpretation": "微弱到几乎看不清的线条、瘫软融化的形状和退缩在角落的位置，是临床抑郁倾向的强烈投射。孩子深信自己毫无价值，心理能量几乎归零。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "极度静谧、温热托底",
+        "tone_guidelines": "故事不能有任何强光或喧闹。必须创造一个极小、极暖、绝对托底的环境（如冬眠的树洞、厚厚的地毯）。只需通过旁白不断确认主角的存在感：“我就在这里静静看着你，你不用发光也很美。”"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "Critical (Level 5)",
+        "intervention_directive": "触发【情感失温最高预警】！孩子处于危险的低能耗状态。建议家长立即介入，发送最高级别的【掌心暖炉】。语音需极尽温柔且高频重复肯定：“你对我们来说是最珍贵的宝贝，哪怕什么都不做，我们也最爱你。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L4_TRAUMA_AVOIDANCE",
+      "rule_name": "高危隐性创伤与回避",
+      "target_combinations": [{"subject":"M05_hidden_erased_objects","line":"L01_heavy_destructive"},{"color":"C05_sudden_focal_color","shape":"S05_tiny_stippling","spatial":"P06_covered_hidden"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["隐性创伤暴露","强烈羞耻/恐惧","矛盾的回避心理","惊恐发作边缘"],
+        "clinical_interpretation": "画完又发疯般涂黑掩盖，或出现突兀的红色/密集斑点，往往预示着隐秘的创伤事件（如身体侵犯、严重惊吓）。潜意识的创伤不受控地溢出，又被意识强行暴力镇压。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "绝对保密、无声吞噬负面",
+        "tone_guidelines": "故事绝不可以试图‘探寻真相’。系统需设定一个‘黑夜守门人’或‘吞噬记忆的巨鲸’。传达的核心是：“任何可怕的、肮脏的、不敢说的东西，在这里都会被安全地封锁并净化。”"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "Critical (Level 5)",
+        "intervention_directive": "触发【疑似创伤最高预警】。后台应标记该案例。极力提醒家长：绝对不要去质问“你画了什么为什么涂掉”。发送【无痕橡皮擦】或【秘密保险柜】。语音：“每个人都有藏在心底的小秘密，没关系，爸爸妈妈永远保护你的小秘密。”"
+      }
+    },
+    {
+      "rule_id": "INTERVENTION_L3_EXTREME_ISOLATION",
+      "rule_name": "中重度家庭防御与孤立",
+      "target_combinations": [{"subject":"M06_barricaded_house","color":"C06_outline_only_avoidance"},{"interaction":"I02_backs_turned","interaction_2":"I03_extreme_disproportion"}],
+      "psychological_diagnosis": {
+        "implicit_emotion": ["情感隔离","拒绝沟通","畏惧权威","高墙心态"],
+        "clinical_interpretation": "无门窗且加锁的房子（HTP）和背对、比例悬殊的人物（KFD），表明孩子彻底关闭了心扉。对家庭和外界充满不信任，对家长（权威）感到恐惧和疏离。"
+      },
+      "story_foundation_故事基调奠定": {
+        "emotional_tone_baseline": "不具威胁的靠近、耐心叩门",
+        "tone_guidelines": "主角周围的环境应具备‘尊重边界’的特质。不需要强行破门而入，可以是一只每天在窗外留下一朵花的小鸟。强调‘我不逼你出来，但我也不会离开’的长情陪伴感。"
+      },
+      "parental_intervention_家长关注干预": {
+        "requires_attention": true,
+        "urgency_level": "High (Level 3)",
+        "intervention_directive": "推送【高墙防御提醒】。家长切忌在语音中说教或命令。建议发送【窗台上的小雏菊】或【悄悄话信封】。语音：“爸爸妈妈知道你有时候不想说话，这很正常。我们就坐在你的门外，等你什么时候想开门了，随时可以叫我们。”"
+      }
+    }
+  ]
+};
+
+/* ============== 模拟 AI 分析 ============== */
+function simulateAnalysis(transcript = '') {
+  const text = transcript.toLowerCase();
+  const mappings = MOOD_DICTIONARY['emotion_and_tone_mapping_情绪基调与干预映射'];
+  const taxonomy = MOOD_DICTIONARY['doodle_visual_taxonomy'];
+
+  let rule = mappings.find(r => r.rule_id === 'INTERVENTION_L1_POSITIVE_RESILIENCE') || mappings[0];
+
+  if (text.includes('害怕') || text.includes('怕') || text.includes('哭')) {
+    if (text.includes('怪兽') || text.includes('坏') || text.includes('打')) {
+      rule = mappings.find(r => r.rule_id === 'INTERVENTION_L3_DEFENSIVE_HOSTILITY') || rule;
+    } else {
+      rule = mappings.find(r => r.rule_id === 'INTERVENTION_L4_ANXIETY_COMPULSION') || rule;
+    }
+  } else if (text.includes('怪兽') || text.includes('坏') || text.includes('打')) {
+    rule = mappings.find(r => r.rule_id === 'INTERVENTION_L3_DEFENSIVE_HOSTILITY') || rule;
+  } else if (text.includes('累') || text.includes('不想') || text.includes('黑')) {
+    rule = mappings.find(r => r.rule_id === 'INTERVENTION_L4_DEPRESSION_ENERGY_LOSS') || rule;
+  } else if (text.includes('孤单') || text.includes('一个人') || text.includes('想')) {
+    rule = mappings.find(r => r.rule_id === 'INTERVENTION_L2_LONELINESS_SEEKING') || rule;
+  } else if (text.includes('照顾') || text.includes('懂') || text.includes('弟弟') || text.includes('妹妹')) {
+    rule = mappings.find(r => r.rule_id === 'INTERVENTION_L3_PARENTIFIED_CHILD') || rule;
+  }
+
+  const combo = (rule.target_combinations || [])[0];
+  const extracted = [];
+  if (combo && typeof combo === 'object') {
+    Object.values(combo).forEach(key => {
+      for (const catKey of Object.keys(taxonomy)) {
+        if (catKey === 'description') continue;
+        const cat = taxonomy[catKey];
+        if (cat && cat[key]) {
+          extracted.push({ key, ...cat[key], category: catKey.split('_')[0] });
+          break;
+        }
+      }
+    });
+  }
+  if (extracted.length === 0) {
+    const allFeatures = [];
+    for (const catKey of Object.keys(taxonomy)) {
+      if (catKey === 'description') continue;
+      const cat = taxonomy[catKey];
+      for (const k of Object.keys(cat)) {
+        allFeatures.push({ key: k, ...cat[k], category: catKey.split('_')[0] });
+      }
+    }
+    extracted.push(allFeatures[Math.floor(Math.random() * allFeatures.length)]);
+    extracted.push(allFeatures[Math.floor(Math.random() * allFeatures.length)]);
+  }
+
+  return {
+    rule,
+    extractedFeatures: extracted.slice(0, 3),
+    emotions: rule.psychological_diagnosis.implicit_emotion,
+    interpretation: rule.psychological_diagnosis.clinical_interpretation,
+    directive: rule['parental_intervention_家长关注干预'].intervention_directive,
+    urgency: rule['parental_intervention_家长关注干预'].urgency_level,
+    requiresAttention: rule['parental_intervention_家长关注干预'].requires_attention,
+    storyTone: rule['story_foundation_故事基调奠定'],
+  };
+}
+
+/* ============== DeepSeek AI 分析 ============== */
+function buildDeepSeekPrompt(transcript = '') {
+  const mappings = MOOD_DICTIONARY['emotion_and_tone_mapping_情绪基调与干预映射'];
+  const taxonomy = MOOD_DICTIONARY['doodle_visual_taxonomy'];
+
+  // 压缩知识库：保留干预规则全文 + 特征ID/名称/临床焦点
+  const condensed = {
+    intervention_rules: mappings.map(r => ({
+      rule_id: r.rule_id,
+      rule_name: r.rule_name,
+      target_combinations: r.target_combinations,
+      psychological_diagnosis: r.psychological_diagnosis,
+      story_foundation_故事基调奠定: r['story_foundation_故事基调奠定'],
+      parental_intervention_家长关注干预: r['parental_intervention_家长关注干预']
+    })),
+    visual_features: {}
+  };
+  for (const [catKey, catValue] of Object.entries(taxonomy)) {
+    if (catKey === 'description') { condensed.visual_features[catKey] = catValue; continue; }
+    condensed.visual_features[catKey] = {};
+    for (const [fid, feat] of Object.entries(catValue)) {
+      condensed.visual_features[catKey][fid] = { name: feat.name, clinical_focus: feat.clinical_focus };
+    }
+  }
+
+  const system = `你是一位顶尖的儿童临床心理分析师，精通房树人(HTP)测验、KFD家庭动力绘画和随手涂鸦分析。
+
+请基于以下专业知识库进行分析，知识库包含两部分：
+1. 干预规则库（10条规则，含心理诊断、故事基调、家长干预建议）
+2. 视觉特征库（约100个涂鸦视觉特征节点，按主体/颜色/线条/形状/空间/交互/细节分类）
+
+知识库JSON：
+${JSON.stringify(condensed, null, 0)}
+
+任务：根据孩子的语音描述，从知识库中匹配最相关的视觉特征和干预规则，并输出以下严格JSON格式（不要包含markdown代码块标记）：
+{
+  "matched_features": [{"id":"特征ID","name":"特征名称","category":"所属分类","reason":"匹配原因（30字以内）"}],
+  "rule_id": "匹配的干预规则ID",
+  "emotions": ["隐性情绪1","隐性情绪2"],
+  "clinical_interpretation": "专业临床解读（120字以内）",
+  "directive": "给父母的干预建议（120字以内）",
+  "urgency": "紧急度（使用原文格式如High (Level 3)）",
+  "story_tone": {"emotional_tone_baseline":"故事情感基调","tone_guidelines":"创作指南（80字以内）"}
+}`;
+
+  return {
+    system,
+    user: `孩子的语音描述："${transcript || '我画了一个怪兽,今天我很害怕'}"`
+  };
+}
+
+async function analyzeDoodleWithAI(transcript = '') {
+  const fallback = () => simulateAnalysis(transcript);
+  const apiKey = localStorage.getItem('DEEPSEEK_API_KEY');
+  if (!apiKey) {
+    console.log('未配置 DeepSeek API Key，使用本地模拟逻辑');
+    return { ...fallback(), aiGenerated: false };
+  }
+  try {
+    const { system, user } = buildDeepSeekPrompt(transcript);
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
+        temperature: 0.4,
+        max_tokens: 1200,
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => 'unknown');
+      throw new Error(`DeepSeek HTTP ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error('DeepSeek returned empty content');
+
+    const result = JSON.parse(content);
+    const mappings = MOOD_DICTIONARY['emotion_and_tone_mapping_情绪基调与干预映射'];
+    const matchedRule = mappings.find(r => r.rule_id === result.rule_id) || mappings[0];
+
+    return {
+      rule: matchedRule,
+      extractedFeatures: (result.matched_features || []).map(f => ({
+        key: f.id,
+        name: f.name,
+        category: f.category,
+        description: f.reason || ''
+      })),
+      emotions: result.emotions || matchedRule.psychological_diagnosis.implicit_emotion,
+      interpretation: result.clinical_interpretation || matchedRule.psychological_diagnosis.clinical_interpretation,
+      directive: result.directive || matchedRule['parental_intervention_家长关注干预'].intervention_directive,
+      urgency: result.urgency || matchedRule['parental_intervention_家长关注干预'].urgency_level,
+      requiresAttention: !!(result.urgency || '').match(/High|Highest|Critical|Level [3-5]/i),
+      storyTone: result.story_tone || matchedRule['story_foundation_故事基调奠定'],
+      aiGenerated: true,
+      raw: result
+    };
+  } catch (err) {
+    console.warn('DeepSeek API 调用失败，回退到本地模拟逻辑：', err);
+    const local = fallback();
+    return { ...local, aiGenerated: false, error: err.message };
+  }
+}
+
+function urgencyBadgeClass(level) {
+  if (level.includes('Critical') || level.includes('Level 5')) return 'bg-red-600 text-white';
+  if (level.includes('Highest') || level.includes('Level 4')) return 'bg-orange-500 text-white';
+  if (level.includes('High') || level.includes('Level 3')) return 'bg-amber-500 text-white';
+  if (level.includes('Moderate') || level.includes('Level 2')) return 'bg-yellow-400 text-stone-800';
+  return 'bg-emerald-100 text-emerald-700';
+}
+
+function detectEndingType(parentText) {
+  if (!parentText) return 'default';
+  const p = parentText.toLowerCase();
+  if (p.includes('魔法') || p.includes('魔杖') || p.includes('魔法棒') || p.includes('道具') || p.includes('宝剑') || p.includes('神器') || p.includes(' wand') || p.includes('magic')) return 'magic';
+  if (p.includes('勇敢') || p.includes('勇气') || p.includes('坚强') || p.includes('胆大') || p.includes(' brave') || p.includes('courage')) return 'bravery';
+  if (p.includes('电话') || p.includes('视频') || p.includes('联系') || p.includes('通话') || p.includes('声音') || p.includes('call') || p.includes('phone')) return 'connection';
+  if (p.includes('梦') || p.includes('梦境') || p.includes('枕头') || p.includes('睡觉') || p.includes(' dream') || p.includes('sleep')) return 'dream';
+  if (p.includes('爱') || p.includes('拥抱') || p.includes('抱抱') || p.includes('温暖') || p.includes('陪伴') || p.includes(' love') || p.includes('hug')) return 'love';
+  return 'default';
+}
+
+function generateBookPages(transcript = '', parentText = '', analysis = null) {
+  const t = transcript.toLowerCase();
+  const suffix = ", children's picture book illustration style, soft watercolor, warm lighting, highly detailed, magical, kid-friendly, pastel colors --no realistic, dark, horror";
+  const endingType = detectEndingType(parentText);
+
+  let firstHalf = [];
+  let secondHalf = [];
+
+  if (t.includes('怪兽') || t.includes('害怕') || t.includes('坏')) {
+    firstHalf = [
+      { text: '在一个被星光吻过的夜晚，小朋友画下了一个毛茸茸的大怪兽。它有着彩虹色的爪子和圆滚滚的肚子，看起来……好像有点迷路了。', imagePrompt: 'a cute fluffy rainbow monster with round belly standing in a starry bedroom, child looking at it with curiosity, soft watercolor, warm moonlight' },
+      { text: '“你是谁？”小朋友小声问，把被子拉到了鼻子尖。怪兽眨了眨像灯泡一样大的眼睛，咕噜咕噜地说：“我……我从画里走出来，因为我太孤单了。”', imagePrompt: 'a shy fluffy monster with big round eyes peeking from behind bed, child under blanket, cozy bedroom, soft watercolor' },
+      { text: '小朋友还是有点害怕，心跳得像小鼓一样咚咚响。但怪兽没有靠近，它只是坐在地板上，用爪子轻轻敲了敲地面，像是在说：我不会伤害你。', imagePrompt: 'gentle fluffy monster sitting politely on floor, child watching from bed, warm lamp light, picture book style' },
+      { text: '“你……你也害怕吗？”小朋友试探着问。怪兽点点头，眼泪像珍珠一样滚下来：“我害怕黑暗，害怕一个人，就像你害怕我一样。”', imagePrompt: 'cute monster crying pearl tears, child reaching out from bed with compassion, warm pastel colors, emotional scene' },
+    ];
+
+    const endings = {
+      default: [
+        { text: '小朋友慢慢爬下床，从桌上拿起一支黄色的蜡笔递给怪兽。“我们一起画画吧，”小朋友说，“画出你来的地方，画出你的家。”', imagePrompt: 'child handing yellow crayon to fluffy monster, art table with drawings, warm sunrise colors through window' },
+        { text: '他们一起画了一条长长的、发光的桥。桥的一头是小朋友的房间，另一头……咦？竟然出现了爸爸妈妈的身影，他们正在桥的另一端挥着手！', imagePrompt: 'magical glowing bridge drawn with crayons connecting child room to parents waving, rainbow colors, dreamlike' },
+        { text: '“原来你不是怪兽，你是送信的天使呀！”小朋友笑了。怪兽害羞地挠挠头：“咕咕教授让我来告诉你——爸爸妈妈一直在桥的那一头等你。”', imagePrompt: 'fluffy monster with tiny angel wings blushing, child hugging monster, warm golden light, magical particles' },
+        { text: '夜更深了，怪兽变成了一个软软的毛绒枕头，守护着小朋友入睡。窗外，咕咕教授打着哈欠，把这一页小心翼翼地折成了星星，飞向远方……晚安。', imagePrompt: 'child sleeping peacefully hugging fluffy monster pillow, owl postman flying outside window with star letter, peaceful night' },
+      ],
+      magic: [
+        { text: '小朋友从枕头下摸出了一根闪闪发光的魔法棒——那是爸爸妈妈离开时悄悄留下的礼物。轻轻一挥，怪兽周围的黑暗就变成了漂浮的星星。', imagePrompt: 'child holding glowing magic wand, dark bedroom transforming into starry sky, fluffy monster amazed, soft magical watercolor' },
+        { text: '“这是‘念名棒’，”咕咕教授的声音从窗外轻轻传来，“只要念出爸爸妈妈的名字，就能点亮任何黑暗。”怪兽的眼睛里，倒映着星光，不再害怕了。', imagePrompt: 'owl professor whispering from moonlit window, child and monster looking at magic wand with wonder, warm starlight' },
+        { text: '孩子用魔法棒在空中画了一扇发光的门。门缝里传来爸爸妈妈的声音：“宝贝，我们听见你了！”怪兽开心地跳起来：“原来黑暗里藏着这么好听的声音！”', imagePrompt: 'child drawing glowing door in air with magic wand, warm light and parents silhouettes behind door, monster jumping with joy' },
+        { text: '夜深了，魔法棒化作一颗温柔的小夜灯，怪兽化作软软的毛绒枕头，一起守护着小朋友。咕咕教授把星光折成信，飞向远方的城市……晚安。', imagePrompt: 'magic wand becoming night lamp on nightstand, child sleeping hugging monster pillow, owl flying with star letter, peaceful bedroom' },
+      ],
+      love: [
+        { text: '小朋友爬下床，从抽屉里拿出一条带着太阳味的小毯子——那是上次爸爸妈妈回家时盖过的毯子。孩子把毯子轻轻披在怪兽肩上：“这是爱的铠甲，穿上就不冷了。”', imagePrompt: 'child wrapping soft sun-scented blanket around fluffy monster shoulders, cozy bedroom drawer open, warm emotional watercolor' },
+        { text: '怪兽披着毯子，眼泪变成了暖暖的小气泡。咕咕教授从窗外探出头：“你看，爱是一种可以传递的温度。”小朋友点点头，牵起了怪兽的爪子。', imagePrompt: 'monster crying warm bubble tears, child holding monster claw, owl peeking through window, golden soft light, picture book' },
+        { text: '孩子和怪兽一起，把小毯子剪成了两半——一半给怪兽取暖，一半留给爸爸妈妈回来时用。怪兽突然有了勇气：“我能把你的爱，带给其他害怕黑暗的小朋友吗？”', imagePrompt: 'child and monster cutting blanket into two halves with scissors, warm light, sharing love, cozy bedroom art table' },
+        { text: '怪兽变成了爱的邮差，背着半条小毯子飞向了星空。小朋友枕着剩下的半条毯子，闻到了爸爸妈妈的味道。咕咕教授笑着说：“爱飞得再远，也会回到你身边。”晚安。', imagePrompt: 'monster flying into starry sky as mail carrier with half blanket, child sleeping hugging remaining half, owl waving, peaceful night' },
+      ],
+      bravery: [
+        { text: '小朋友深吸一口气，站在怪兽面前大声说：“我不怕了！妈妈说，勇敢不是不害怕，是害怕的时候还愿意牵住朋友的手！”', imagePrompt: 'child standing bravely in front of fluffy monster, reaching out hand, bedroom lit by determination glow, inspirational picture book scene' },
+        { text: '怪兽瞪大了灯泡一样的眼睛：“你……你愿意做我的朋友？”小朋友用力点点头，伸出小手。怪兽的爪子不再冰凉，变得像晒过太阳的棉花一样暖。', imagePrompt: 'child and monster shaking hands warmly, magical warmth spreading from their hands, soft golden glow, emotional friendship moment' },
+        { text: '他们手拉手走到窗边，一起看星星。怪兽说：“原来有朋友一起看星星，黑暗就不那么黑了。”窗外的星星好像也亮了一些。', imagePrompt: 'child and monster standing by window looking at stars together, starry night sky reflecting in their eyes, warm cozy silhouette' },
+        { text: '小朋友教怪兽唱自己编的勇敢歌，两个好朋友的声音轻轻飘到了星星上。咕咕教授记下了这首歌，在书上写道：“这就是勇气的旋律。”晚安。', imagePrompt: 'child and monster singing together by window, musical notes floating toward stars, owl professor writing in book, peaceful night' },
+      ],
+      connection: [
+        { text: '小朋友从书包里掏出一个小小的、贝壳形状的电话——那是上次分别时爸爸妈妈给的“想我就听一听”。孩子把贝壳轻轻放到怪兽耳边。', imagePrompt: 'child holding seashell shaped telephone to monster ear, warm glow emanating from shell, cozy bedroom, magical watercolor' },
+        { text: '贝壳里传来妈妈讲故事的声音，像溪水一样温柔。怪兽的眼泪慢慢停了：“原来……黑暗里也能听见这么温暖的声音。”', imagePrompt: 'monster listening to seashell phone with tear stopping, warm light flowing from shell like water, child smiling beside, emotional' },
+        { text: '“每天晚上八点，”小朋友说，“我们都可以一起听。这样你就不是一个人害怕了。”怪兽笑了，那是它第一次笑，像风吹动风铃一样好听。', imagePrompt: 'child and monster sitting together listening to glowing seashell, clock showing eight, warm lamplight, friendship smile, picture book' },
+        { text: '贝壳电话变成了一个小小的收音机，每晚都播放着爸爸妈妈的声音。怪兽学会了在声音里入睡。咕咕教授把这段温柔的电波，编成了永远的摇篮曲。', imagePrompt: 'seashell becoming small radio on nightstand, monster sleeping peacefully on rug, child asleep in bed, owl conducting musical notes, peaceful' },
+      ],
+      dream: [
+        { text: '小朋友从床头拿起一个绣着月亮的软枕头，递给怪兽：“这是妈妈给我缝的‘好梦枕头’，枕着它只会做好梦。分你一半！”', imagePrompt: 'child handing embroidered moon pillow to fluffy monster, soft moonlight glow from pillow, cozy bedroom, warm watercolor' },
+        { text: '怪兽把脸埋进枕头，深深吸了一口气：“ smells like……像被阳光晒过的云朵。”咕咕教授眨眨眼：“那是妈妈把晚安吻缝进了针脚里。”', imagePrompt: 'monster burying face in glowing pillow with content expression, owl professor winking, warm dreamy light, magical bedroom scene' },
+        { text: '枕头里飘出一个个金色的小梦泡泡，每个泡泡里都映着小朋友和爸爸妈妈在一起的画面。怪兽戳破一个，里面传出爸爸妈妈的笑声。', imagePrompt: 'golden dream bubbles floating from pillow showing family memories, child and monster watching with wonder, soft magical light' },
+        { text: '夜深了，怪兽枕着好梦枕头，变成了孩子床边最忠实的守护兽。咕咕教授把最后一个梦泡泡收进了书页：“梦里的相聚，也是真实的陪伴。”晚安。', imagePrompt: 'monster sleeping as guardian by child bed with moon pillow, dream bubble being placed into book by owl, peaceful starry bedroom' },
+      ],
+    };
+    secondHalf = endings[endingType] || endings.default;
+
+  } else if (t.includes('孤单') || t.includes('一个人') || t.includes('想')) {
+    firstHalf = [
+      { text: '在一片会唱歌的森林里，有一个小朋友，Ta 的声音像银铃一样好听。可是今天，森林里只有回声，没有回应。', imagePrompt: 'a child standing in a beautiful singing forest, looking lonely, tall trees with friendly faces, soft watercolor morning light' },
+      { text: '“有人吗——”小朋友喊了一声。山谷把这句话轻轻地送回来，像妈妈以前做的那样。可是山谷毕竟不是妈妈。', imagePrompt: 'child shouting into echo valley, sound waves visualized as soft ribbons, misty mountains, picture book style' },
+      { text: '突然，树洞里探出一个毛茸茸的脑袋。是一只戴着邮差帽的小松鼠！“咕咕教授派我来送信！”小松鼠神气地说。', imagePrompt: 'fluffy squirrel postman with mailbag peeking from tree hole, child surprised, warm dappled sunlight' },
+      { text: '信上画着一座桥，桥的另一端，有两个熟悉的影子。小朋友的眼泪一下子就出来了——那是爸爸妈妈的轮廓。', imagePrompt: 'child holding glowing letter with bridge drawing, silhouettes of parents on bridge, tear drop turning into crystal, emotional' },
+    ];
+
+    const endings = {
+      default: [
+        { text: '“他们让我告诉你，”小松鼠认真地说，“每一次你想他们的时候，风就是他们的拥抱，星星就是他们的眼睛。”', imagePrompt: 'squirrel reading letter to child, wind as soft arms hugging child, stars as eyes in night sky, magical watercolor' },
+        { text: '那天晚上，小朋友画了一颗超级大的星星，挂在床头。星星一闪一闪的，真的就像妈妈在眨眼睛。', imagePrompt: 'child hanging giant hand-drawn star above bed, star glowing with warm light, cozy bedroom, soft colors' },
+        { text: '森林里的动物们都来了。他们围着小朋友，唱起了摇篮曲。原来，即使爸爸妈妈不在身边，爱也从来没有离开过。', imagePrompt: 'forest animals gathered around child bed singing lullaby, deer rabbit bear owl, warm campfire glow, peaceful' },
+        { text: '咕咕教授把这一切写进了书里，说：“这是最珍贵的故事，因为小朋友学会了——孤单的时候，爱会变成各种形状来陪你。”晚安。', imagePrompt: 'wise owl professor writing in giant book by candlelight, child sleeping surrounded by animal friends, magical library' },
+      ],
+      magic: [
+        { text: '小松鼠从邮差包里掏出一颗会发光的种子：“这是咕咕教授给你的魔法种子，只要对着它说出思念，就会长出你想见的东西。”', imagePrompt: 'squirrel postman holding glowing magic seed in paws, child looking with wonder, forest clearing with dappled sunlight, magical watercolor' },
+        { text: '小朋友把种子埋在枕头下，轻声说“我想爸爸妈妈”。第二天，床头长出了一棵小小的、发着蓝光的树，每片叶子上都印着爸爸妈妈的笑脸。', imagePrompt: 'small glowing blue tree growing beside child bed, leaves showing parents smiling faces, child touching leaf with wonder, magical morning light' },
+        { text: '小松鼠爬在蓝光树上，把树叶收集起来做成了一本翻页画册。每翻一页，就能听见一句爸爸妈妈的声音，像风铃一样清脆。', imagePrompt: 'squirrel arranging glowing leaves into flip book on tree branch, child turning pages, sound waves visualized as light, magical forest' },
+        { text: '蓝光树在夜晚守护着小朋友，树上的星星和天上的星星连在了一起。咕咕教授说：“思念播下的种子，一定会开花结果。”晚安。', imagePrompt: 'blue glow tree connecting bed stars to real night sky, child sleeping peacefully, owl professor smiling, peaceful magical forest night' },
+      ],
+      love: [
+        { text: '小松鼠打开信，里面飘出一条温暖的围巾，带着太阳和洗衣粉的味道——那是妈妈亲手织的。孩子把围巾围在脖子上，森林的风突然不冷了。', imagePrompt: 'warm knitted scarf floating from letter, child wrapping it around neck, forest wind becoming gentle, warm emotional watercolor' },
+        { text: '小松鼠说：“这条围巾穿过山谷、越过河流，把妈妈的温度带到了这里。”小朋友摸了摸围巾，感觉像被妈妈抱在怀里一样。', imagePrompt: 'child hugging scarf with eyes closed feeling warmth, squirrel watching with gentle smile, soft golden light in forest, picture book' },
+        { text: '孩子把围巾分享给了森林里所有感到孤单的小动物。大家围成一圈，围巾变成了世界上最长的拥抱链，连大树都弯下腰来加入。', imagePrompt: 'forest animals holding long scarf in circle hug, deer rabbit bear owl, tree bending down to join, warm campfire light, emotional scene' },
+        { text: '咕咕教授在书上画下这个圆圈，写道：“爱不是一个人拥有的东西，而是分出去之后会变得更多的东西。”晚安，好梦。', imagePrompt: 'owl professor drawing circle of light in giant book, animals and child sleeping in circle, warm magical forest library, peaceful' },
+      ],
+      bravery: [
+        { text: '小松鼠拍拍胸脯：“走！我带你去找咕咕教授说的‘勇敢泉’，喝了就能长出不怕孤单的铠甲！”', imagePrompt: 'squirrel postman pointing forward bravely, child looking determined, forest path with fireflies leading forward, adventure atmosphere' },
+        { text: '他们穿过萤火虫隧道，跨过露珠小桥，终于找到了勇敢泉——原来那是一面镜子，泉水里映着孩子自己灿烂的笑脸。', imagePrompt: 'child and squirrel looking into mirror spring showing child smiling reflection, fireflies around, magical forest clearing, warm light' },
+        { text: '“勇敢不是不害怕孤单，”咕咕教授从树后走出来，“是即使感到孤单，也敢对明天说‘你好’。”孩子对着镜子笑了，泉水泛起了彩虹。', imagePrompt: 'owl professor stepping from behind tree, child smiling at mirror spring, rainbow ripples in water, magical forest moment, inspirational' },
+        { text: '孩子把勇敢泉的故事讲给了森林里每一个小伙伴。从此，每当有人感到孤单，就去照一照镜子。咕咕教授说：“每个人都是自己的勇气光源。”', imagePrompt: 'child telling story to circle of forest animals by mirror spring, each animal looking at own reflection with smile, warm golden light, peaceful' },
+      ],
+      connection: [
+        { text: '小松鼠从邮差包里掏出一个小小的风车电话：“按下红色按钮，就能接通云端信号站，爸爸妈妈正在那头等着呢！”', imagePrompt: 'squirrel holding small windmill telephone with red button, child eyes wide with excitement, forest background, magical postal tools' },
+        { text: '“嘟——嘟——”电话通了！妈妈的声音像小溪一样流出来：“宝贝，你好吗？”孩子的眼泪变成了笑着的眼泪，小松鼠也跟着抹眼睛。', imagePrompt: 'child holding windmill phone with tears of joy, mother voice visualized as gentle stream flowing from phone, squirrel wiping tears, emotional' },
+        { text: '爸爸在电话那头说：“我们每天这个时间都会守在电话旁，就像守着一个不会消失的约定。”孩子用力点头，风车的叶片转得像小星星。', imagePrompt: 'father voice from phone as warm light, child nodding enthusiastically, windmill phone blades spinning like stars, squirrel clapping, joyful forest' },
+        { text: '小松鼠把风车电话挂在床头，每当叶片转动，就说明远方有人在想念你。咕咕教授把这股温暖的风写成了永远不断线的故事线。晚安。', imagePrompt: 'windmill phone hanging above bed with gently spinning blades, child sleeping peacefully, owl professor writing with wind as ink, peaceful night forest' },
+      ],
+      dream: [
+        { text: '小松鼠从邮差包里抖落出一个绣着云朵的软枕头：“这是‘入梦枕’，咕咕教授说，枕着它就能在梦里见到想见的人。”', imagePrompt: 'squirrel pulling out embroidered cloud pillow from mailbag, child reaching for it with wonder, soft dreamlike light in forest, magical' },
+        { text: '那天晚上，小朋友枕着入梦枕，真的走进了梦里。森林变成了彩虹色的，而桥的尽头，爸爸妈妈正张开着双臂。', imagePrompt: 'child walking through rainbow forest in dream, bridge leading to parents with open arms, soft dreamy watercolor, magical light particles' },
+        { text: '妈妈在梦里亲了亲孩子的额头，爸爸把孩子高高举起。小松鼠也在梦里，它变成了会飞的小信差，把一家人的笑声撒满了整个森林。', imagePrompt: 'dream scene with mother kissing child forehead, father lifting child high, flying squirrel scattering laughter as sparkles, rainbow dream forest' },
+        { text: '天亮了，入梦枕上留着一根爸爸妈妈的头发。咕咕教授说：“梦里的拥抱，和真实的拥抱一样温暖。因为那都是爱的形状。”晚安。', imagePrompt: 'child waking up holding cloud pillow with single parent hair on it, morning light through trees, owl professor smiling gently, peaceful forest morning' },
+      ],
+    };
+    secondHalf = endings[endingType] || endings.default;
+
+  } else {
+    firstHalf = [
+      { text: '在云朵的上面，有一所只有孩子才能看见的魔法学校。今天，我们的小主人公要在这里上最重要的一课。', imagePrompt: 'magical school floating on clouds, rainbow bridges, child with backpack looking amazed, soft pastel watercolor' },
+      { text: '校长是一只打哈欠的猫头鹰，大家都叫它咕咕教授。“今天的作业，”咕咕教授说，“是画出一个你心里的宝贝。”', imagePrompt: 'wise owl professor with glasses in front of chalkboard, child students at cloud desks, warm classroom light' },
+      { text: '小朋友拿起画笔，画下了自己的家。虽然爸爸妈妈在很远的地方工作，但在画里，他们正牵着小朋友的手。', imagePrompt: 'child drawing family holding hands, crayon lines glowing with magic, warm kitchen scene emerging from paper, picture book' },
+      { text: '画纸突然亮了起来！一道温暖的光从纸上射出，把整个教室都染成了蜂蜜的颜色。咕咕教授笑了：“你看，爱会发光。”', imagePrompt: 'drawing paper emitting golden honey light, classroom filled with warm glow, magical particles floating, watercolor' },
+    ];
+
+    const endings = {
+      default: [
+        { text: '光里走出一个小小的信使，它抱着一封信，上面写着爸爸妈妈的笔迹。“亲爱的宝贝，我们在云上给你修了一座小花园。”', imagePrompt: 'tiny fairy mail carrier holding glowing letter, child receiving it with wonder, cloud garden visible in background' },
+        { text: '小朋友跟着信使飞上了云端。哇！那里有会唱歌的花朵，有糖果雨，还有一张永远为小朋友留着的大摇椅。', imagePrompt: 'cloud garden with singing flowers candy rain and big rocking chair, child flying with fairy, dreamlike pastel colors' },
+        { text: '摇椅上放着一部旧旧的电话。“铃——”电话响了！是妈妈的声音，是爸爸的声音，虽然隔着千山万水，却近得像在耳边。', imagePrompt: 'vintage telephone on rocking chair emitting warm light, child listening with eyes closed smiling, cloud garden sunset' },
+        { text: '咕咕教授把电话线编成了故事的第一页。“只要想念还在，”它说，“再远的距离，也只是一页纸的厚度。”晚安，好梦。', imagePrompt: 'owl professor weaving telephone cord into book pages, child asleep on cloud pillow, moon smiling, peaceful starry night' },
+      ],
+      magic: [
+        { text: '画纸的光芒凝聚成一根小小的画笔，笔杆上刻着孩子的名字。咕咕教授说：“这是‘心愿笔’，用它画出来的东西，都会收到爱的回应。”', imagePrompt: 'glowing wish brush appearing from drawing paper with child name engraved, owl professor presenting it, magical classroom light, wonder' },
+        { text: '孩子拿起心愿笔，在纸上画了一扇窗。窗外出现了爸爸妈妈的城市，灯火一盏一盏亮起来，像在对孩子眨眼睛。', imagePrompt: 'child drawing window with wish brush, city lights of parents home visible through drawn window, warm glow, magical classroom, emotional' },
+        { text: '“每当你想念的时候，”咕咕教授说，“就画一扇窗。窗的这一头是你，那一头是他们，中间是满满的爱。”', imagePrompt: 'child standing before glowing drawn window, love visualized as warm light bridge connecting through window, owl professor gesturing, magical' },
+        { text: '孩子把心愿笔收进了书包。从此以后，每当想念来袭，就画一扇窗。咕咕教授把满墙的窗户编成了最温暖的故事集。晚安。', imagePrompt: 'child placing wish brush in backpack, wall covered with glowing windows showing family moments, owl professor writing, peaceful cloud school night' },
+      ],
+      love: [
+        { text: '画纸的光芒变成了一封立体的信，打开后，里面飞出两只温暖的小鸟，一只是妈妈的化身，一只是爸爸的化身。', imagePrompt: '3d letter opening with two warm glowing birds flying out, one motherly one fatherly, child reaching out with joy, magical classroom light' },
+        { text: '小鸟落在孩子的肩膀上，轻轻啄了啄孩子的耳朵——那是爸爸妈妈常说的晚安吻的方式。咕咕教授笑了：“爱会飞，而且永远不会迷路。”', imagePrompt: 'glowing birds on child shoulders nuzzling ears, warm soft light, owl professor smiling, magical particles, emotional picture book scene' },
+        { text: '孩子把两只小鸟放进了胸前的口袋。它们不会说话，但每当孩子感到需要拥抱时，就会用温暖的小脑袋蹭蹭孩子。', imagePrompt: 'child placing glowing birds into shirt pocket, birds peeking out warmly, soft golden light from pocket, cozy feeling, picture book' },
+        { text: '咕咕教授在毕业证书上写下：“你已经学会了世界上最厉害的魔法——把爱放在心里，它就能战胜一切距离。”晚安。', imagePrompt: 'owl professor writing on graduation certificate, child holding glowing birds in pocket proudly, cloud school ceremony, warm magical light' },
+      ],
+      bravery: [
+        { text: '画纸里走出一个小小的、发光的骑士，举着一面镜子盾牌。咕咕教授说：“这是勇气骑士，它的盾牌能照出你心里最强大的力量。”', imagePrompt: 'small glowing knight with mirror shield emerging from drawing paper, child looking up in awe, magical classroom, warm heroic light' },
+        { text: '孩子看向盾牌，里面映出的不是骑士，而是自己——自己微笑的样子、自己画画的样子、自己勇敢说晚安的样子。', imagePrompt: 'child looking into mirror shield seeing reflections of brave self, smiling drawing saying goodnight, multiple warm reflections, inspirational' },
+        { text: '“原来最强大的勇气，”咕咕教授说，“就是你自己。”孩子接过盾牌，突然觉得自己长高了，云端的阳光也变得更亮了。', imagePrompt: 'child holding mirror shield growing taller with confidence, sunlight breaking through clouds brighter, owl professor nodding proudly, magical' },
+        { text: '孩子把盾牌挂在了床头，每当感到害怕或想念，就照一照。咕咕教授把这面镜子写进了教科书，标题是：《每个人的心里都住着一位骑士》。', imagePrompt: 'mirror shield hanging above cloud bed, child sleeping peacefully beneath it, owl professor writing in textbook by moonlight, peaceful night' },
+      ],
+      connection: [
+        { text: '画纸飘到了教室中央，变成了一块会发光的屏幕。咕咕教授按下一个按钮，屏幕上出现了两张熟悉的笑脸。', imagePrompt: 'drawing paper transforming into glowing screen in classroom, parents faces appearing on screen, child gasping with joy, magical technology watercolor' },
+        { text: '“宝贝！”爸爸妈妈同时挥手。孩子说：“你们看，我在云上上学了！”屏幕这头和那头的笑声融在了一起，连云朵都笑出了彩虹。', imagePrompt: 'child waving at glowing screen with parents waving back, rainbow forming from mixed laughter clouds, magical classroom, joyful emotional scene' },
+        { text: '“以后每个周末，”妈妈说，“我们都会在这个屏幕上见面，就像坐在同一张沙发上一样。”爸爸点点头，举起了孩子最爱吃的饼干。', imagePrompt: 'screen showing parents on couch with child favorite cookies, warm living room scene blending with cloud classroom, soft magical light, cozy' },
+        { text: '咕咕教授把这块屏幕叫做“爱的窗口”，并告诉所有学生：“科技再远，也远不过思念；但思念再深，也能通过一扇窗抵达。”晚安，好梦。', imagePrompt: 'owl professor naming glowing screen as window of love, students listening, child sleeping near screen with gentle glow, peaceful cloud school night' },
+      ],
+      dream: [
+        { text: '画纸的光芒变成了一张柔软的云朵床，床上放着一只绣着小月亮的枕头。咕咕教授说：“这是‘团圆梦枕’，今晚你会在梦里完成最重要的一课。”', imagePrompt: 'cloud bed with embroidered moon pillow materializing from drawing paper, child looking amazed, owl professor gesturing, warm magical classroom' },
+        { text: '孩子枕着团圆梦枕，真的飞进了梦境。云朵变成了软软的沙发，爸爸妈妈就坐在沙发的两端，中间留着一个刚刚好的位置。', imagePrompt: 'child flying into dream on cloud pillow, cloud becoming soft sofa with parents sitting on each end, empty spot in middle, dreamy watercolor' },
+        { text: '孩子扑进中间的位置，左边是妈妈的怀抱，右边是爸爸的肩膀。咕咕教授在梦的边缘写下评语：“满分。因为爱的功课，你早就学会了。”', imagePrompt: 'child cuddling between parents on cloud sofa in dream, owl professor writing grade with feather quill at dream edge, warm golden dream light' },
+        { text: '醒来时，枕头的一角微微发温。咕咕教授说：“梦里的团聚，会在心里留下真实的温度。这是魔法学校最高的魔法。”晚安。', imagePrompt: 'child waking up touching warm corner of moon pillow, owl professor smiling gently, morning light through cloud window, peaceful magical school' },
+      ],
+    };
+    secondHalf = endings[endingType] || endings.default;
+  }
+
+  return [...firstHalf, ...secondHalf].map(p => ({ ...p, imagePrompt: p.imagePrompt + suffix }));
+}
+
+/* ============== 产品引导页 ============== */
+function LandingPage({ onEnterChild, onEnterParent }) {
+  // 静态随机星空：useMemo 锁定位置，组件首次渲染时生成一次，之后永不重算。
+  // 不使用 setState 跟随鼠标，避免重渲染导致星星位置整体重置造成的"疯狂闪烁"。
+  const stars = useMemo(() => Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    size: Math.random() * 3 + 1,
+    duration: `${Math.random() * 3 + 2}s`,
+    delay: `${Math.random() * 3}s`,
+    peak: Math.random() * 0.5 + 0.3,
+  })), []);
+  const clouds = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    top: `${Math.random() * 80 + 10}%`,
+    left: `${Math.random() * 80 + 10}%`,
+    width: Math.random() * 120 + 80,
+    height: Math.random() * 60 + 40,
+    duration: `${Math.random() * 6 + 6}s`,
+    tx: `${(Math.random() - 0.5) * 60}px`,
+    ty: `${(Math.random() - 0.5) * 40}px`,
+  })), []);
+
+  const bigStars = useMemo(() => Array.from({ length: 25 }, (_, i) => ({
+    id: `b${i}`,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    size: Math.random() * 2.5 + 2,
+    duration: `${Math.random() * 2 + 3}s`,
+    delay: `${Math.random() * 4}s`,
+  })), []);
+  const medStars = useMemo(() => Array.from({ length: 50 }, (_, i) => ({
+    id: `m${i}`,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    size: Math.random() * 1.5 + 1,
+    duration: `${Math.random() * 2 + 2}s`,
+    delay: `${Math.random() * 4}s`,
+  })), []);
+  const smallStars = useMemo(() => Array.from({ length: 80 }, (_, i) => ({
+    id: `s${i}`,
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+    size: Math.random() * 1 + 0.5,
+    duration: `${Math.random() * 2 + 1.5}s`,
+    delay: `${Math.random() * 4}s`,
+  })), []);
+
+  return (
+    <div
+      className="landing-bg relative flex items-center justify-center"
+    >
+      {/* 深邃动态银河背景 */}
+      <div className="cosmos-bg" />
+
+      {/* 多层繁星 */}
+      {bigStars.map(s => (
+        <div key={s.id} className="cosmos-star big" style={{ top: s.top, left: s.left, width: s.size, height: s.size, '--duration': s.duration, '--delay': s.delay }} />
+      ))}
+      {medStars.map(s => (
+        <div key={s.id} className="cosmos-star med" style={{ top: s.top, left: s.left, width: s.size, height: s.size, '--duration': s.duration, '--delay': s.delay }} />
+      ))}
+      {smallStars.map(s => (
+        <div key={s.id} className="cosmos-star small" style={{ top: s.top, left: s.left, width: s.size, height: s.size, '--duration': s.duration, '--delay': s.delay }} />
+      ))}
+
+      {/* 流星 */}
+      <div className="shooting-star shooting-star-1" />
+      <div className="shooting-star shooting-star-2" />
+      <div className="shooting-star shooting-star-3" />
+
+      {/* 原有魔法粒子（保留，z-index使其从书中飘出） */}
+      {stars.map(s => (
+        <div key={s.id} className="star" style={{ top: s.top, left: s.left, width: s.size, height: s.size, '--duration': s.duration, '--delay': s.delay, '--peak-opacity': s.peak, zIndex: 15 }} />
+      ))}
+      {clouds.map(c => (
+        <div key={c.id} className="cloud" style={{ top: c.top, left: c.left, width: c.width, height: c.height, '--duration': c.duration, '--tx': c.tx, '--ty': c.ty, zIndex: 15 }} />
+      ))}
+
+      {/* 3D 魔法童话书 */}
+      <div className="magic-book-wrapper relative flex items-center justify-center px-4" style={{ zIndex: 20 }}>
+        <div className="magic-book">
+          {/* 高级皮革书皮 */}
+          <div className="book-cover" />
+
+          {/* 左页：标题与介绍（手绘涂鸦风） */}
+          <div className="book-page-left flex flex-col items-center justify-center px-10 py-12 text-center select-none">
+            <div className="text-5xl mb-4" style={{ filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.15))' }}>☁️📖</div>
+            <h1 className="kid-font text-[32px] font-bold text-stone-800 mb-2 tracking-wide">云端枕边书</h1>
+            <div className="doodle-text text-xs text-stone-500 font-medium tracking-[0.2em] mb-6">CLOUD LULLABY</div>
+            <p className="doodle-text text-sm leading-7 max-w-[240px] text-stone-600">
+              跨越千里的 AI 亲子共创绘本<br/>
+              让留守的星光，与城市的灯火<br/>
+              在故事里重逢
+            </p>
+            <div className="mt-5 flex items-center gap-2 text-stone-400">
+              <span className="w-6 h-0.5 bg-stone-300 rounded-full" />
+              <span className="doodle-text text-[10px] tracking-widest">守护每一份遥远的思念</span>
+              <span className="w-6 h-0.5 bg-stone-300 rounded-full" />
+            </div>
+          </div>
+
+          {/* 右页：涂鸦风入口按钮 */}
+          <div className="book-page-right flex flex-col items-center justify-center px-10 py-12 gap-6">
+            <button onClick={onEnterChild} className="doodle-btn doodle-wiggle">
+              我是小朋友
+            </button>
+            <button onClick={onEnterParent} className="doodle-btn doodle-wiggle">
+              我是爸爸妈妈
+            </button>
+          </div>
+
+          {/* 逼真书脊折痕 */}
+          <div className="book-spine-crease" />
+        </div>
+      </div>
+
+      {/* 底部文案 */}
+      <div className="absolute bottom-6 left-0 right-0 text-center" style={{ zIndex: 20 }}>
+        <div className="text-white/25 text-xs tracking-wider" style={{ fontFamily: 'cursive' }}>咕咕教授 × AI · 守护每一份遥远的思念</div>
+      </div>
+    </div>
+  );
+}
+
+/* ============== Demo Console ============== */
+function DemoConsole({ role, setRole, appState }) {
+  const [showModal, setShowModal] = React.useState(false);
+  const [inputKey, setInputKey] = React.useState('');
+  const [savedTip, setSavedTip] = React.useState(false);
+
+  React.useEffect(() => {
+    if (savedTip) {
+      const t = setTimeout(() => setSavedTip(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [savedTip]);
+
+  const openModal = () => {
+    setInputKey(localStorage.getItem('DEEPSEEK_API_KEY') || '');
+    setShowModal(true);
+  };
+
+  const saveKey = () => {
+    if (inputKey.trim()) {
+      localStorage.setItem('DEEPSEEK_API_KEY', inputKey.trim());
+    } else {
+      localStorage.removeItem('DEEPSEEK_API_KEY');
+    }
+    setSavedTip(true);
+    setShowModal(false);
+  };
+
+  return (
+    <>
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur text-white px-5 py-2.5 flex items-center justify-between border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+            <span className="text-xs font-mono tracking-wider opacity-80">DEMO CONSOLE</span>
+          </div>
+          <span className="text-[10px] font-mono opacity-40">|</span>
+          <span className="text-[10px] font-mono opacity-50">state: {appState}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => setRole(ROLES.CHILD)} className={`console-btn px-3 py-1 rounded-md text-xs font-medium ${role === ROLES.CHILD ? 'active' : 'text-white/70'}`}>🎨 儿童视角</button>
+          <button onClick={() => setRole(ROLES.PARENT)} className={`console-btn px-3 py-1 rounded-md text-xs font-medium ${role === ROLES.PARENT ? 'active' : 'text-white/70'}`}>📱 父母视角</button>
+          <button onClick={openModal} className="console-btn px-3 py-1 rounded-md text-xs font-medium text-white/70 hover:text-white/90 ml-1">🔑 设置 API Key</button>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-white/90">配置 DeepSeek API Key</h3>
+              <button onClick={() => setShowModal(false)} className="text-white/40 hover:text-white/80 text-lg leading-none">×</button>
+            </div>
+            <input
+              type="password"
+              value={inputKey}
+              onChange={e => setInputKey(e.target.value)}
+              placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/90 placeholder:text-white/20 focus:outline-none focus:border-white/30 mb-4"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button onClick={() => setShowModal(false)} className="px-3 py-1.5 rounded-md text-xs text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors">取消</button>
+              <button onClick={saveKey} className="px-3 py-1.5 rounded-md text-xs bg-white/90 text-black font-medium hover:bg-white transition-colors">保存</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {savedTip && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[70] bg-emerald-500/90 text-white text-xs px-4 py-1.5 rounded-full shadow-lg backdrop-blur">
+          保存成功
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ============== 顶角咕咕 ============== */
+function ProfessorOwlCorner({ message }) {
+  return (
+    <div className="flex items-start gap-3 pointer-events-none">
+      <div className="relative owl-float">
+        <div className="text-[7rem] leading-none drop-shadow-[0_12px_30px_rgba(139,92,246,0.4)]">🦉</div>
+        <span className="absolute -top-4 -right-2 text-lg text-amber-700 owl-zzz font-bold">z</span>
+        <span className="absolute -top-8 right-3 text-base text-amber-700 owl-zzz font-bold" style={{animationDelay:'0.6s'}}>z</span>
+        <div className="absolute -bottom-2 -right-3 w-8 h-8 bg-amber-700 rounded-sm border-2 border-amber-900 flex items-center justify-center text-xs">✉️</div>
+      </div>
+      {message && <div className="bg-white/85 backdrop-blur px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-md text-xs text-stone-700 mt-2 max-w-[180px] owl-bubble-float">{message}</div>}
+    </div>
+  );
+}
+
+/* ============== 打字机 ============== */
+function Typewriter({ text, speed = 55 }) {
+  const [shown, setShown] = useState('');
+  useEffect(() => {
+    setShown('');
+    if (!text) return;
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setShown(text.slice(0, i));
+      if (i >= text.length) clearInterval(timer);
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text]);
+  return (<><span>{shown}</span>{shown.length < (text || '').length && <span className="typer-cursor"></span>}</>);
+}
+
+/* ============== 儿童·教程 ============== */
+function ChildTutorial({ onReady }) {
+  return (
+    <div className="child-zone relative w-full h-full child-dream-bg flex flex-col items-center overflow-y-auto pt-24 pb-10 px-5">
+      {/* 梦幻浮动颗粒 */}
+      <div className="dream-particle w-3 h-3 top-[12%] left-[10%]" style={{animationDelay:'0s'}} />
+      <div className="dream-particle w-2 h-2 top-[18%] right-[12%]" style={{animationDelay:'1.4s'}} />
+      <div className="dream-particle w-4 h-4 top-[55%] left-[8%]" style={{animationDelay:'2.6s'}} />
+      <div className="dream-particle w-2 h-2 top-[70%] right-[16%]" style={{animationDelay:'3.2s'}} />
+      <div className="dream-particle w-3 h-3 top-[35%] right-[8%]" style={{animationDelay:'4s'}} />
+
+      {/* 标题 */}
+      <h1 className="kid-font text-[26px] font-extrabold text-indigo-700 text-center drop-shadow-sm relative z-10 leading-snug">
+        ✨ 咕咕教授要教你两个魔法 ✨
+      </h1>
+      <div className="kid-font text-sm text-stone-500 mb-3 mt-1 relative z-10">
+        准备好了吗，小冒险家？
+      </div>
+
+      {/* 巨型咕咕教授（含光晕 + 飘起来的 z 呼噜） */}
+      <div className="relative z-10" style={{ width: '14rem', height: '14rem', marginTop: '8px', marginBottom: '8px' }}>
+        <div className="owl-aura" />
+        <div className="owl-float w-full h-full flex items-center justify-center relative">
+          <div className="text-[9rem] leading-none drop-shadow-[0_18px_40px_rgba(139,92,246,0.55)] relative z-10 select-none">🦉</div>
+          <span className="absolute top-[6%] right-[18%] text-amber-700 owl-zzz font-extrabold text-3xl z-20">z</span>
+          <span className="absolute top-[-6%] right-[26%] text-amber-700 owl-zzz font-extrabold text-2xl z-20" style={{animationDelay:'0.6s'}}>z</span>
+          <span className="absolute top-[-18%] right-[34%] text-amber-700 owl-zzz font-extrabold text-xl z-20" style={{animationDelay:'1.2s'}}>z</span>
+        </div>
+      </div>
+
+      {/* 魔法气泡步骤 */}
+      <div className="flex flex-col gap-3 w-full max-w-sm relative z-10">
+        <div className="magic-bubble flex items-center gap-3 text-[15px]">
+          <span className="text-3xl shrink-0 leading-none">🎨</span>
+          <span>第一步：在<span className="text-pink-600 font-bold">魔法画板</span>上画出你的故事</span>
+        </div>
+        <div className="magic-bubble flex items-center gap-3 text-[15px]">
+          <span className="text-3xl shrink-0 leading-none">🔮</span>
+          <span>第二步：按住<span className="text-purple-600 font-bold">发光的水晶球</span>偷偷告诉我</span>
+        </div>
+      </div>
+
+      {/* 巨型呼吸按钮 */}
+      <button onClick={onReady} className="tutorial-cta-btn relative z-10 mt-6">
+        我知道啦！
+      </button>
+
+      <div className="kid-font text-xs text-stone-400/90 mt-3 mb-2 relative z-10">
+        点一下就能开始你的魔法之旅啦 🪄
+      </div>
+    </div>
+  );
+}
+
+/* ============== 儿童画板 ============== */
+const BRUSHES = [
+  { id: 'mint', color: '#7BCFA9', name: '薄荷' },
+  { id: 'butter', color: '#F5D86E', name: '奶油' },
+  { id: 'peach', color: '#F4A988', name: '蜜桃' },
+  { id: 'lilac', color: '#B49DDB', name: '紫莹' },
+  { id: 'sky', color: '#7FB8E8', name: '天蓝' },
+];
+const ERASER = { id: 'eraser', color: '#fffdf7', name: '橡皮' };
+
+function ChildDrawingCanvas({ onSubmit }) {
+  const canvasRef = useRef(null);
+  const ctxRef = useRef(null);
+  const drawingRef = useRef(false);
+  const lastPointRef = useRef(null);
+  const [activeTool, setActiveTool] = useState(BRUSHES[0].id);
+  const [hasContent, setHasContent] = useState(false);
+  const hasContentRef = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const targetWidth = Math.floor(rect.width * dpr);
+      const targetHeight = Math.floor(rect.height * dpr);
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        const prev = canvas.toDataURL();
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctxRef.current = ctx;
+        if (hasContentRef.current) {
+          const img = new Image();
+          img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          img.src = prev;
+        }
+      }
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  const getPoint = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+  };
+  const startDraw = (e) => { e.preventDefault(); drawingRef.current = true; lastPointRef.current = getPoint(e); };
+  const draw = (e) => {
+    if (!drawingRef.current) return;
+    e.preventDefault();
+    const ctx = ctxRef.current; if (!ctx) return;
+    const p = getPoint(e);
+    const last = lastPointRef.current;
+    const tool = activeTool === 'eraser' ? ERASER : BRUSHES.find(b => b.id === activeTool);
+    const dpr = window.devicePixelRatio || 1;
+    ctx.strokeStyle = tool.color;
+    ctx.lineWidth = (activeTool === 'eraser' ? 28 : 12) * dpr;
+    ctx.globalCompositeOperation = activeTool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.quadraticCurveTo(last.x, last.y, (last.x + p.x)/2, (last.y + p.y)/2);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastPointRef.current = p;
+    if (!hasContentRef.current) { hasContentRef.current = true; setHasContent(true); }
+  };
+  const endDraw = (e) => { if (e && e.preventDefault) e.preventDefault(); drawingRef.current = false; lastPointRef.current = null; };
+
+  const handleSubmit = () => {
+    if (!hasContent) return;
+    onSubmit && onSubmit(canvasRef.current.toDataURL('image/png'));
+  };
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasContentRef.current = false; setHasContent(false);
+  };
+
+  return (
+    <div className="relative w-full h-full child-dream-bg flex flex-col overflow-hidden child-zone">
+      {/* Top: IP Guide + Actions */}
+      <div className="flex-none relative z-10 pt-20 px-4">
+        <div className="flex items-start justify-between">
+          <ProfessorOwlCorner message="今天画点什么给爸爸妈妈呀?" />
+          <button onClick={clearCanvas} className="bg-white/70 backdrop-blur px-3 py-1.5 rounded-full text-xs text-stone-600 shadow-sm active:scale-95 transition mt-1">🗑 重画</button>
+        </div>
+      </div>
+
+      {/* Middle: Magic Canvas */}
+      <div className="flex-1 min-h-0 px-4 py-3 relative z-10">
+        <div className="magic-canvas-container w-full h-full relative">
+          <canvas ref={canvasRef} className="w-full h-full block paper-texture" onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw} onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={endDraw} />
+          {!hasContent && <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="text-stone-400/80 text-xl font-bold tracking-wider select-none kid-font">在这里画画呀 ✏️</div></div>}
+        </div>
+      </div>
+
+      {/* Bottom: Submit + Toolbar Dock */}
+      <div className="flex-none relative z-10 pb-6 px-4 space-y-3">
+        <div className="flex justify-end px-1">
+          <button onClick={handleSubmit} disabled={!hasContent} className={`rounded-full px-6 py-4 text-white font-bold text-base flex items-center gap-2 transition-all duration-300 ${!hasContent ? 'bg-gray-400/60 opacity-50 grayscale cursor-not-allowed' : 'magic-btn-active cursor-pointer'}`}>
+            <span className="text-xl">✨</span><span>画好了</span>
+            {hasContent && <><span className="sparkle" style={{top:'4px', left:'10px'}}></span><span className="sparkle" style={{bottom:'6px', right:'14px', animationDelay:'0.5s'}}></span><span className="sparkle" style={{top:'12px', right:'30px', animationDelay:'1s'}}></span></>}
+          </button>
+        </div>
+        <div className="glass-dock flex items-end justify-center gap-3 max-w-md mx-auto px-6 py-4">
+          {BRUSHES.map(b => (
+            <button key={b.id} onClick={() => setActiveTool(b.id)} className={`brush-tool ${activeTool === b.id ? 'active' : ''}`} aria-label={b.name}>
+              <div className="flex flex-col items-center">
+                <div className="w-0 h-0" style={{borderLeft:'14px solid transparent', borderRight:'14px solid transparent', borderBottom:`18px solid ${b.color}`, filter:'drop-shadow(0 2px 3px rgba(0,0,0,0.15))'}} />
+                <div className="w-7 h-14 rounded-b-md shadow-md" style={{background:`linear-gradient(180deg, ${b.color} 0%, ${b.color}cc 100%)`, boxShadow:'inset -3px 0 4px rgba(0,0,0,0.15), 0 4px 6px rgba(0,0,0,0.1)'}} />
+              </div>
+            </button>
+          ))}
+          <button onClick={() => setActiveTool('eraser')} className={`brush-tool ml-2 ${activeTool === 'eraser' ? 'active' : ''}`} aria-label="橡皮">
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-7 rounded-t-md bg-pink-300 shadow-md" style={{boxShadow:'inset -3px 0 4px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.15)'}} />
+              <div className="w-10 h-7 rounded-b-md bg-blue-200" style={{boxShadow:'inset -3px 0 4px rgba(0,0,0,0.1)'}} />
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============== 语音引导话术 ============== */
+const VOICE_PROMPTS = [
+  "咕咕!我看到你的小主人公啦~他接下来要去干什么呀?",
+  "哇,这个形状好神奇,它是在寻找什么宝藏吗?",
+  "天哪,画面里好像藏着一个小秘密,快按住大麦克风偷偷告诉我吧!",
+  "唔...我好像看到一个会发光的东西,它有什么故事呢?",
+  "嘿嘿,这里好像有个新朋友哦,你们今天一起做了什么呀?",
+  "(打哈欠)咕咕有点犯困,但你的故事我一定认真听完~",
+  "这幅画里有好多颜色呀,哪一笔是你最喜欢的?为什么呢?",
+];
+const FALLBACK_TRANSCRIPT = "我画了一个怪兽,今天我很害怕";
+
+/* ============== 儿童·语音诉说 ============== */
+function ChildVoiceScene({ drawing, onSent }) {
+  const [prompt] = useState(() => VOICE_PROMPTS[Math.floor(Math.random() * VOICE_PROMPTS.length)]);
+  const [recording, setRecording] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [interimText, setInterimText] = useState('');
+  const [flying, setFlying] = useState(false);
+  const [recognized, setRecognized] = useState(false);
+  const [showTypeHint, setShowTypeHint] = useState(false);
+  const phaseRef = useRef('idle');
+  const pendingStopRef = useRef(false);
+  const transcriptRef = useRef('');
+  const recognitionRef = useRef(null);
+  const mockTimerRef = useRef(null);
+  const sentRef = useRef(false);
+  const silenceTimerRef = useRef(null);
+
+  useEffect(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    try {
+      const rec = new SR();
+      rec.lang = 'zh-CN'; rec.continuous = true; rec.interimResults = true;
+      rec.onresult = (e) => {
+        const text = Array.from(e.results).map(r => r[0].transcript).join('');
+        transcriptRef.current = text;
+        setInterimText(text);
+        if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+      };
+      rec.onstart = () => {
+        phaseRef.current = 'recording';
+        if (pendingStopRef.current) { try { rec.stop(); } catch(e) {} }
+      };
+      rec.onend = () => {
+        phaseRef.current = 'idle';
+        setRecording(false);
+        setInterimText('');
+        if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+        if (pendingStopRef.current) { pendingStopRef.current = false; return; }
+        const t = (transcriptRef.current || '').trim();
+        if (sentRef.current) return;
+        if (t) { setTranscript(prev => prev ? prev + ' ' + t : t); setRecognized(true); }
+      };
+      rec.onerror = () => {
+        phaseRef.current = 'idle';
+        pendingStopRef.current = false;
+        setRecording(false);
+        setInterimText('');
+        if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+      };
+      recognitionRef.current = rec;
+    } catch (err) { recognitionRef.current = null; }
+  }, []);
+  useEffect(() => () => {
+    if (mockTimerRef.current) clearTimeout(mockTimerRef.current);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch(e) {} }
+  }, []);
+
+  const handleSend = () => {
+    if (sentRef.current || !transcript.trim()) return;
+    sentRef.current = true;
+    setFlying(true);
+    setTimeout(() => onSent && onSent(transcript), 2700);
+  };
+
+  const toggleMic = () => {
+    if (sentRef.current || flying) return;
+
+    if (phaseRef.current === 'idle') {
+      // 开始录音
+      phaseRef.current = 'requesting';
+      transcriptRef.current = '';
+      setInterimText('');
+      setRecording(true);
+      setShowTypeHint(false);
+      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          // 8秒静默超时：若未收到任何识别结果，自动停止并引导打字
+          silenceTimerRef.current = setTimeout(() => {
+            if (phaseRef.current !== 'idle') {
+              try { recognitionRef.current.stop(); } catch(e) {}
+              phaseRef.current = 'idle';
+              setRecording(false);
+              setInterimText('');
+              setShowTypeHint(true);
+            }
+          }, 8000);
+        } catch(err) { phaseRef.current = 'idle'; setRecording(false); }
+      } else {
+        mockTimerRef.current = setTimeout(() => {
+          if (phaseRef.current !== 'idle' && !sentRef.current) {
+            phaseRef.current = 'idle'; setRecording(false);
+            const t = FALLBACK_TRANSCRIPT;
+            setTranscript(prev => prev ? prev + ' ' + t : t);
+            setRecognized(true);
+          }
+        }, 3000);
+      }
+    } else if (phaseRef.current === 'requesting' || phaseRef.current === 'recording') {
+      // 停止录音
+      if (phaseRef.current === 'requesting') { pendingStopRef.current = true; return; }
+      phaseRef.current = 'idle';
+      setRecording(false);
+      setInterimText('');
+      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+      if (mockTimerRef.current) { clearTimeout(mockTimerRef.current); mockTimerRef.current = null; }
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(err) {}
+      } else {
+        const t = FALLBACK_TRANSCRIPT;
+        setTranscript(prev => prev ? prev + ' ' + t : t);
+        setRecognized(true);
+      }
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full child-dream-bg flex flex-col overflow-hidden child-zone">
+      {/* Floating dream particles */}
+      <div className="dream-particle w-3 h-3 top-[20%] left-[15%]" style={{animationDelay:'0s'}} />
+      <div className="dream-particle w-2 h-2 top-[60%] left-[80%]" style={{animationDelay:'2s'}} />
+      <div className="dream-particle w-4 h-4 top-[40%] left-[70%]" style={{animationDelay:'4s'}} />
+      <div className="dream-particle w-2 h-2 top-[80%] left-[20%]" style={{animationDelay:'1s'}} />
+      <div className="dream-particle w-3 h-3 top-[10%] left-[85%]" style={{animationDelay:'3s'}} />
+
+      {/* Top: Drawing + Owl */}
+      <div className="flex-none relative z-10 pt-20 px-4">
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col items-start">
+            <div className="thumb-card bg-white/90 backdrop-blur p-2 rounded-3xl shadow-[0_12px_40px_rgba(139,92,246,0.2)] -rotate-6 border border-white/60">
+              {drawing ? <img src={drawing} className="w-24 h-28 object-cover rounded-xl paper-texture" alt="作品" /> : <div className="w-24 h-28 paper-texture rounded-xl" />}
+            </div>
+            <div className="text-[11px] text-indigo-700/70 mt-2 ml-2 bg-white/60 px-2 py-0.5 rounded-full">我的作品</div>
+          </div>
+          <div className="flex flex-col items-center mt-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-purple-400/30 blur-2xl rounded-full scale-150 pointer-events-none" />
+              <div className="text-[8rem] leading-none owl-float drop-shadow-[0_12px_40px_rgba(139,92,246,0.5)] relative z-10">🦉</div>
+              <span className="absolute -top-3 -right-2 text-amber-700 owl-zzz font-bold text-xl z-10">z</span>
+              <span className="absolute -top-8 right-4 text-amber-700 owl-zzz font-bold text-lg z-10" style={{animationDelay:'0.6s'}}>z</span>
+              <span className="absolute -top-14 right-9 text-amber-700 owl-zzz font-bold text-base z-10" style={{animationDelay:'1.2s'}}>z</span>
+            </div>
+            <div className="text-sm text-amber-800/70 mt-2 italic yawn-bubble bg-white/60 px-3 py-1 rounded-full font-bold">~哈欠~</div>
+            <div className="text-sm text-indigo-600 mt-1 font-bold">咕咕教授</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Middle: Prompt bubble */}
+      <div className="flex-1 min-h-0 relative z-10 flex items-center justify-center px-6">
+        <div className="relative bg-white/70 backdrop-blur-xl rounded-[2rem] shadow-[0_12px_40px_rgba(139,92,246,0.15)] px-7 py-5 max-w-md text-center text-stone-700 text-base leading-relaxed border border-white/50">
+          <div className="absolute -top-3 right-10 w-4 h-4 bg-white/70 rotate-45 border-l border-t border-white/50"></div>
+          {showTypeHint ? (
+            <div className="animate-pulse">
+              <span className="text-2xl mr-2">🦉</span>
+              <span className="text-indigo-700 font-medium">咕咕好像没听清哦，要不要试试用键盘直接打字告诉咕咕？</span>
+            </div>
+          ) : (
+            <Typewriter text={prompt} speed={60} />
+          )}
+        </div>
+      </div>
+
+      {/* Bottom: Crystal Ball Mic + Transcript Bubble + Send */}
+      <div className="flex-none relative z-10 pb-6 flex flex-col items-center select-none px-4">
+        {/* 实时转录气泡 */}
+        <div className="mb-3 w-full max-w-xs min-h-[3rem]">
+          {recording && interimText && (
+            <div className="px-4 py-2.5 bg-white/80 backdrop-blur-xl rounded-2xl text-stone-700 text-sm leading-relaxed shadow-lg border border-white/70 animate-pulse text-center">
+              <span className="text-rose-500 mr-1">🔴</span>“{interimText}”
+            </div>
+          )}
+          {recording && !interimText && (
+            <div className="px-4 py-2.5 bg-rose-50/70 backdrop-blur-xl rounded-2xl text-rose-600 text-sm leading-relaxed shadow-md border border-rose-100/60 text-center animate-pulse">
+              <span className="mr-1">👂</span>咕咕正在认真听...
+            </div>
+          )}
+          {/* 魔法纸条：可编辑的语音/打字输入框 */}
+          {!recording && !flying && (
+            <textarea
+              value={transcript}
+              onChange={(e) => { setTranscript(e.target.value); setShowTypeHint(false); }}
+              placeholder="🪄 在这里写下你的故事，或者点击麦克风说话..."
+              className="w-full px-4 py-3 bg-white/70 backdrop-blur-xl rounded-2xl text-stone-700 text-sm leading-relaxed shadow-md border border-white/60 placeholder:text-stone-400/70 focus:outline-none focus:ring-2 focus:ring-indigo-300/60 resize-none min-h-[4.5rem] max-h-32 overflow-y-auto magic-scroll"
+              rows={2}
+              readOnly={false}
+            />
+          )}
+        </div>
+
+        <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
+          {!recording && <div className="absolute inset-[-20px] rounded-full bg-purple-400/20 blur-2xl animate-pulse pointer-events-none" />}
+          {recording && (
+            <>
+              <span className="sound-wave-ring" style={{animationDelay:'0s'}}></span>
+              <span className="sound-wave-ring" style={{animationDelay:'0.4s'}}></span>
+              <span className="sound-wave-ring" style={{animationDelay:'0.8s'}}></span>
+              <span className="sound-wave-ring" style={{animationDelay:'1.2s'}}></span>
+            </>
+          )}
+          <button disabled={sentRef.current || flying} onClick={toggleMic} className={`relative w-32 h-32 rounded-full flex items-center justify-center text-white shadow-2xl select-none transition-transform duration-300 active:scale-95 ${recording ? 'crystal-ball-recording' : 'crystal-ball'}`} style={{touchAction:'none'}}>
+            <span className="text-6xl drop-shadow-lg relative z-10">{recording ? '🔴' : '🎤'}</span>
+          </button>
+        </div>
+        <div className={`mt-3 text-sm font-medium tracking-wider text-center ${recording ? 'text-rose-500' : 'text-indigo-700'}`}>
+          {recording ? '正在听你说，再点一下停止 🔴' : (transcript ? '还要说什么吗？点击麦克风再说一点~' : '点击大麦克风，偷偷告诉咕咕')}
+        </div>
+
+        {/* 巨大的发送按钮 */}
+        {transcript.trim() && !flying && (
+          <button onClick={handleSend} className="mt-4 magic-btn-active rounded-full px-8 py-4 text-white font-bold text-lg flex items-center gap-2 active:scale-95 transition shadow-[0_0_60px_rgba(255,20,147,0.5)]">
+            <span className="text-2xl">✨</span><span>我说完了，寄给爸爸妈妈</span>
+          </button>
+        )}
+      </div>
+      {flying && <div className="fixed inset-0 z-40 pointer-events-none flex items-end justify-center pb-32"><div className="relative envelope-fly text-9xl">✉️<span className="trail-star" style={{left:'-12px', top:'30px', animationDelay:'0.1s'}}>✨</span><span className="trail-star" style={{right:'-10px', top:'20px', animationDelay:'0.4s'}}>⭐</span><span className="trail-star" style={{left:'10px', bottom:'-10px', animationDelay:'0.2s'}}>💫</span></div></div>}
+    </div>
+  );
+}
+
+/* ============== 儿童·等待 ============== */
+function ChildWaiting({ drawing, transcript }) {
+  return (
+    <div className="relative w-full h-full child-dream-bg pt-24 px-6 flex flex-col items-center justify-center child-zone">
+      <ProfessorOwlCorner />
+      <div className="bg-white/85 backdrop-blur rounded-3xl shadow-xl p-7 max-w-md text-center border-2 border-white">
+        <div className="text-[6rem] mb-3 leading-none">🦉✉️</div>
+        <h2 className="text-2xl font-bold text-stone-700 mb-2 kid-font">咕咕教授飞向城市啦!</h2>
+        <p className="text-base text-stone-500 leading-relaxed mb-5 kid-font">它带着你的画和悄悄话,<br/>明天来看故事吧 ~</p>
+        {drawing && <div className="bg-stone-50 rounded-2xl p-3 mb-3"><img src={drawing} className="w-full max-w-[200px] mx-auto rounded-xl shadow-sm" />{transcript && <p className="text-sm text-stone-500 mt-3 italic kid-font">"{transcript}"</p>}</div>}
+        <div className="mt-5 inline-flex items-center gap-1.5 bg-stone-900/90 text-white text-sm px-3 py-1.5 rounded-full kid-font"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>顶部 Console 切换"父母视角" →</div>
+      </div>
+      <div className="absolute bottom-10 text-stone-400 text-base animate-pulse kid-font">·  ·  ·  夜深啦,做个好梦  ·  ·  ·</div>
+    </div>
+  );
+}
+
+/* ============== 父母·批阅 (核心 · iOS Dashboard 风) ============== */
+function ParentReview({ drawing, transcript, onBookReady }) {
+  const [analysis, setAnalysis] = useState(null);
+  const [aiLoading, setAiLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [interimText, setInterimText] = useState('');
+  const [parentText, setParentText] = useState(transcript || '');
+  const phaseRef = useRef('idle');
+  const pendingStopRef = useRef(false);
+  const transcriptRef = useRef('');
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAiLoading(true);
+    analyzeDoodleWithAI(transcript).then(result => {
+      if (!cancelled) { setAnalysis(result); setAiLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [transcript]);
+
+  useEffect(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    try {
+      const rec = new SR();
+      rec.lang = 'zh-CN'; rec.continuous = true; rec.interimResults = true;
+      rec.onresult = (e) => { const text = Array.from(e.results).map(r => r[0].transcript).join(''); transcriptRef.current = text; setInterimText(text); };
+      rec.onstart = () => {
+        phaseRef.current = 'recording';
+        if (pendingStopRef.current) { try { rec.stop(); } catch(e) {} }
+      };
+      rec.onend = () => {
+        phaseRef.current = 'idle';
+        setRecording(false);
+        setInterimText('');
+        if (pendingStopRef.current) { pendingStopRef.current = false; return; }
+        const t = (transcriptRef.current || '').trim();
+        if (t) { setParentText(prev => prev ? prev + ' ' + t : t); }
+      };
+      rec.onerror = () => {
+        phaseRef.current = 'idle';
+        pendingStopRef.current = false;
+        setRecording(false);
+        setInterimText('');
+      };
+      recognitionRef.current = rec;
+    } catch (err) { recognitionRef.current = null; }
+  }, []);
+
+  const handleAdopt = () => { setLoading(true); setTimeout(() => onBookReady && onBookReady({ childTranscript: transcript, parentText: parentText || '' }), 2000); };
+
+  const toggleVoice = () => {
+    if (phaseRef.current === 'idle') {
+      phaseRef.current = 'requesting';
+      transcriptRef.current = '';
+      setInterimText('');
+      setRecording(true);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.start(); } catch(err) { phaseRef.current = 'idle'; setRecording(false); }
+      }
+    } else if (phaseRef.current === 'requesting' || phaseRef.current === 'recording') {
+      if (phaseRef.current === 'requesting') { pendingStopRef.current = true; return; }
+      phaseRef.current = 'idle';
+      setRecording(false);
+      setInterimText('');
+      if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch(err) {} }
+    }
+  };
+
+  const handleConfirm = () => {
+    setLoading(true);
+    setTimeout(() => onBookReady && onBookReady({ childTranscript: transcript, parentText: parentText || '' }), 2000);
+  };
+
+  return (
+    <div className="mobile-mockup">
+      <div className="mobile-screen flex flex-col relative bg-[#F2F2F7]">
+        {/* iOS 导航栏 */}
+        <div className="h-12 bg-white/95 backdrop-blur flex items-center justify-center px-4 relative z-10 shrink-0 border-b border-gray-200">
+          <span className="text-sm font-semibold text-gray-900">云端枕边书</span>
+        </div>
+
+        {/* 滚动内容 */}
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+          {/* 🔍 AI 深度特征提取 */}
+          <div className="mx-4 mt-4 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+              <span className="text-base">🔍</span>
+              <span className="text-sm font-semibold text-gray-900">AI 深度特征提取</span>
+              {aiLoading ? (
+                <span className="ml-auto text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full animate-pulse">分析中...</span>
+              ) : analysis?.aiGenerated ? (
+                <span className="ml-auto text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">DeepSeek AI</span>
+              ) : analysis ? (
+                <span className="ml-auto text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">本地模拟</span>
+              ) : null}
+            </div>
+            {aiLoading ? (
+              <div className="p-8 flex flex-col items-center">
+                <div className="w-8 h-8 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+                <div className="text-xs text-gray-500">DeepSeek 正在分析语音与涂鸦...</div>
+                <div className="text-[10px] text-gray-400 mt-1">如遇网络异常将自动切换本地逻辑</div>
+              </div>
+            ) : (
+              <div className="p-4">
+                {/* 匹配特征 */}
+                {analysis?.extractedFeatures?.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-2">识别到的视觉特征</div>
+                    <div className="flex flex-wrap gap-2">
+                      {analysis.extractedFeatures.map((f, i) => (
+                        <div key={i} className="flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          <span className="text-xs font-medium text-blue-900">{f.name}</span>
+                          <span className="text-[10px] text-blue-600/70">{f.category}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* AI 推理摘要 */}
+                {analysis?.raw?.reasoning && (
+                  <div className="text-xs text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3 border border-gray-100">{analysis.raw.reasoning}</div>
+                )}
+                {!analysis?.raw?.reasoning && !analysis?.aiGenerated && (
+                  <div className="text-xs text-gray-500 leading-relaxed">基于本地知识库进行的模拟特征提取与情绪推断。网络恢复后将自动调用 DeepSeek AI 进行深度分析。</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 素材卡 */}
+          <div className="mx-4 mt-3 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-900">今日素材</span>
+              <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">NEW</span>
+            </div>
+            <div className="p-4">
+              {drawing && <img src={drawing} className="w-full rounded-xl mb-3 border border-gray-100" alt="涂鸦" />}
+              {transcript && (
+                <div className="bg-amber-50 rounded-xl px-3 py-2.5 border border-amber-100">
+                  <div className="text-[10px] text-amber-700 font-medium mb-1">语音转录</div>
+                  <div className="text-sm text-gray-800">"{transcript}"</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 📝 父母补充寄语 */}
+          <div className="mx-4 mt-3 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-900">📝 父母补充寄语</span>
+              <span className="text-[10px] text-gray-400">可语音追加或手动编辑</span>
+            </div>
+            <div className="p-4">
+              <textarea
+                value={parentText}
+                onChange={(e) => setParentText(e.target.value)}
+                className="w-full bg-gray-50 rounded-xl p-3 text-sm text-gray-800 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                rows={4}
+                placeholder="在这里写下你想对孩子说的话，或点击麦克风追加语音..."
+              />
+              <div className="flex items-center justify-between mt-3">
+                <button
+                  onClick={toggleVoice}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition-transform active:scale-90 ${recording ? 'bg-red-500 animate-pulse' : 'bg-gray-900'}`}
+                  title={recording ? '点击停止录音' : '点击开始录音'}
+                >
+                  {recording ? '🔴' : '🎤'}
+                </button>
+                {recording && interimText && <span className="text-xs text-blue-600 animate-pulse ml-2 flex-1 truncate">{interimText}</span>}
+                {recording && !interimText && <span className="text-xs text-red-500 animate-pulse ml-2 flex-1 truncate">正在聆听...</span>}
+                {!recording && <span className="text-xs text-gray-400 ml-2 flex-1 truncate">点击麦克风追加语音</span>}
+                <button
+                  onClick={handleConfirm}
+                  disabled={!parentText.trim()}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition ${parentText.trim() ? 'bg-blue-600 text-white shadow-sm active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                >
+                  ✅ 确定发送，生成大结局
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 情绪雷达 · 心理分析 */}
+          <div className="mx-4 mt-3 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+              <span className="text-3xl">🦉👓</span>
+              <span className="text-sm font-semibold text-gray-900">情绪雷达 · 心理分析</span>
+            </div>
+            <div className="p-4">
+              {!analysis ? (
+                <div className="animate-pulse space-y-3">
+                  <div className="h-4 bg-gray-100 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-full" />
+                  <div className="h-3 bg-gray-100 rounded w-5/6" />
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {analysis.emotions.map((em, i) => (
+                      <span key={i} className="px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-600 border border-red-100">{em}</span>
+                    ))}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-relaxed mb-4">{analysis.interpretation}</div>
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-3 mb-3">
+                    <div className="text-[10px] text-emerald-700 font-semibold mb-1 uppercase tracking-wider">干预建议</div>
+                    <div className="text-xs text-emerald-800 leading-relaxed">{analysis.directive}</div>
+                  </div>
+                  <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${urgencyBadgeClass(analysis.urgency)}`}>
+                    ⚠️ 紧急度 {analysis.urgency}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* AI 童话大纲 */}
+          <div className="mx-4 mt-3 bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-900">AI 童话大纲</span>
+              <span className="text-[10px] font-medium text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">初稿</span>
+            </div>
+            <div className="p-4">
+              {!analysis ? (
+                <div className="h-20 bg-gray-50 rounded-xl animate-pulse" />
+              ) : (
+                <div className="text-sm text-gray-800 leading-relaxed">
+                  <div className="mb-2 text-xs font-medium text-violet-700">基调：{analysis.storyTone.emotional_tone_baseline}</div>
+                  <p className="text-gray-600">{analysis.storyTone.tone_guidelines}</p>
+                  <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-500 italic border border-gray-100">
+                    「从前，在一个能被温柔包裹的王国里，小主人公带着Ta的秘密出发了……」
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 底部操作栏 */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 flex gap-3 z-20">
+          <button onClick={handleAdopt} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3.5 text-sm font-semibold shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+            <span>❤️</span> 一键采纳 AI 建议
+          </button>
+        </div>
+
+        {/* Loading overlay */}
+        {loading && (
+          <div className="absolute inset-0 bg-white/90 backdrop-blur z-40 flex flex-col items-center justify-center">
+            <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4" />
+            <div className="text-sm font-bold text-gray-900">AI 正在重写大结局...</div>
+            <div className="text-xs text-gray-400 mt-1">咕咕教授正在奋笔疾书 ✍️</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============== 魔法绘本阅读器 ============== */
+function BookReader({ transcript, parentText }) {
+  const safeTranscript = transcript || "我画了一个怪兽,今天我很害怕";
+  const safeParentText = parentText || '';
+  const [pages] = useState(() => {
+    const analysis = simulateAnalysis(safeTranscript);
+    return generateBookPages(safeTranscript, safeParentText, analysis);
+  });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+
+  const page = pages[currentPage];
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(page.imagePrompt)}?nologo=true`;
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setImageError(false);
+    setSpeaking(false);
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (currentPage < pages.length - 1) {
+      const img = new Image();
+      img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(pages[currentPage + 1].imagePrompt)}?nologo=true`;
+    }
+  }, [currentPage, pages]);
+
+  const speak = () => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(page.text);
+    u.lang = 'zh-CN';
+    u.pitch = 1.15;
+    u.rate = 0.85;
+    u.onstart = () => setSpeaking(true);
+    u.onend = () => setSpeaking(false);
+    u.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(u);
+  };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') setCurrentPage(p => Math.min(p + 1, pages.length - 1));
+      if (e.key === 'ArrowLeft') setCurrentPage(p => Math.max(p - 1, 0));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [pages.length]);
+
+  return (
+    <div className="w-full h-full flex flex-col bg-[#FDF8F0] pt-12 select-none">
+      {/* 顶部装饰书名 */}
+      <div className="shrink-0 pt-6 pb-2 text-center">
+        <div className="text-[10px] text-stone-400 font-medium tracking-[0.3em] uppercase">Cloud Lullaby</div>
+        <div className="text-xs text-stone-300 mt-1 tracking-widest">云端枕边书 · 魔法绘本</div>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 lg:p-10">
+        <div className="w-full max-w-6xl h-full max-h-[860px] flex flex-col md:flex-row bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.07)] overflow-hidden border border-stone-100">
+
+          {/* 左：插图页 */}
+          <div className="flex-1 relative bg-[#FAFAF8] flex items-center justify-center p-5 md:p-8 lg:p-10">
+            {/* 画框效果 */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              {!imageLoaded && !imageError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                  <div className="w-16 h-16 border-[3px] border-stone-200 border-t-stone-400 rounded-full animate-spin mb-4" />
+                  <div className="text-sm font-medium text-stone-500">咕咕教授正在作画...</div>
+                  <div className="text-xs text-stone-400 mt-1">AI 渲染中，请稍候</div>
+                </div>
+              )}
+              {imageError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                  <div className="text-5xl mb-3">🖼️</div>
+                  <div className="text-sm text-stone-500">网络有点调皮</div>
+                  <div className="text-xs text-stone-400 mt-1">但故事依旧温暖</div>
+                </div>
+              )}
+              <img
+                src={imageUrl}
+                alt="绘本插图"
+                className={`max-w-full max-h-full object-contain rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-700 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
+            </div>
+          </div>
+
+          {/* 书脊分割线 */}
+          <div className="hidden md:block w-px bg-stone-100 self-stretch my-8" />
+
+          {/* 右：文字页 */}
+          <div className="flex-1 flex flex-col justify-center p-6 md:p-10 lg:p-14 relative">
+            {/* 页码 */}
+            <div className="absolute top-6 right-8 md:top-8 md:right-10 flex items-center gap-2">
+              <span className="text-[10px] text-stone-300 font-mono tracking-wider">{String(currentPage + 1).padStart(2, '0')} / {String(pages.length).padStart(2, '0')}</span>
+            </div>
+
+            {/* 章节装饰线 */}
+            <div className="flex items-center gap-3 mb-8">
+              <div className="h-px flex-1 bg-stone-100" />
+              <span className="text-[10px] text-stone-300 tracking-[0.2em]">CHAPTER</span>
+              <div className="h-px flex-1 bg-stone-100" />
+            </div>
+
+            {/* 正文 */}
+            <div className={`text-base md:text-lg lg:text-xl leading-[2.2] text-stone-700 font-medium tracking-wide ${imageLoaded ? 'page-content' : ''}`}>
+              {page.text}
+            </div>
+
+            {/* 章节装饰线底部 */}
+            <div className="flex items-center gap-3 mt-8">
+              <div className="h-px flex-1 bg-stone-100" />
+              <span className="text-stone-300 text-xs">❦</span>
+              <div className="h-px flex-1 bg-stone-100" />
+            </div>
+
+            {/* 伴读按钮 */}
+            <div className="mt-8 flex items-center justify-between">
+              {typeof window !== 'undefined' && window.speechSynthesis && (
+                <button
+                  onClick={speak}
+                  disabled={speaking}
+                  className={`group flex items-center gap-2.5 px-6 py-3 rounded-full text-sm font-semibold transition-all shadow-sm ${speaking ? 'bg-rose-500 text-white shadow-rose-200' : 'bg-stone-100 hover:bg-stone-200 text-stone-700'}`}
+                >
+                  <span className={`text-base transition-transform ${speaking ? 'animate-pulse' : 'group-hover:scale-110'}`}>{speaking ? '🔊' : '▶️'}</span>
+                  <span>{speaking ? '正在伴读...' : '播放妈妈/爸爸伴读'}</span>
+                </button>
+              )}
+              <span className="text-[10px] text-stone-300 tracking-wider hidden md:block">by 咕咕教授 × AI</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 底部导航 */}
+      <div className="shrink-0 pb-6 md:pb-8 flex justify-center">
+        <div className="flex items-center gap-5 bg-white rounded-2xl px-6 md:px-8 py-3.5 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-stone-100">
+          <button
+            disabled={currentPage === 0}
+            onClick={() => setCurrentPage(p => p - 1)}
+            className="flex items-center gap-1 px-4 py-2.5 bg-stone-50 hover:bg-stone-100 rounded-xl text-sm font-medium text-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95"
+          >
+            <span>←</span> 上一页
+          </button>
+
+          <div className="flex gap-2 px-2">
+            {pages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === currentPage ? 'bg-stone-800 w-6' : 'bg-stone-200 hover:bg-stone-300'}`}
+                aria-label={`第 ${i + 1} 页`}
+              />
+            ))}
+          </div>
+
+          <button
+            disabled={currentPage === pages.length - 1}
+            onClick={() => setCurrentPage(p => p + 1)}
+            className="flex items-center gap-1 px-4 py-2.5 bg-stone-50 hover:bg-stone-100 rounded-xl text-sm font-medium text-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition active:scale-95"
+          >
+            下一页 <span>→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============== 父母·等待 ============== */
+function ParentWaiting() {
+  return (
+    <div className="mobile-mockup">
+      <div className="mobile-screen flex flex-col items-center justify-center text-center p-6">
+        <div className="text-5xl mb-3">📭</div>
+        <h3 className="text-base font-bold text-stone-700 mb-1">信箱空空</h3>
+        <p className="text-xs text-stone-400">等孩子的第一封信来...</p>
+      </div>
+    </div>
+  );
+}
+
+/* ============== 主应用 ============== */
+function App() {
+  const [role, setRole] = useState(ROLES.CHILD);
+  const [appState, setAppState] = useState(APP_STATES.LANDING);
+  const [drawingData, setDrawingData] = useState(null);
+  const [voiceData, setVoiceData] = useState(null);
+  const [parentTextData, setParentTextData] = useState('');
+
+  const handleDrawingSubmit = (dataUrl) => { setDrawingData(dataUrl); setAppState(APP_STATES.CHILD_VOICE); };
+  const handleVoiceSent = (text) => { setVoiceData(text); setAppState(APP_STATES.CHILD_WAITING); };
+
+  useEffect(() => {
+    setAppState(prev => {
+      // LANDING / CHILD_TUTORIAL 是引导态，不能被自动路由覆盖
+      if (prev === APP_STATES.LANDING || prev === APP_STATES.CHILD_TUTORIAL) return prev;
+      if (role === ROLES.PARENT) {
+        return prev === APP_STATES.BOOK_READY ? prev : (drawingData ? APP_STATES.PARENT_REVIEW : APP_STATES.WAITING_PARENT);
+      } else {
+        if (!drawingData) return APP_STATES.CHILD_DRAWING;
+        if (!voiceData) return APP_STATES.CHILD_VOICE;
+        return APP_STATES.CHILD_WAITING;
+      }
+    });
+  }, [role, drawingData, voiceData]);
+
+  const renderChild = () => {
+    if (appState === APP_STATES.CHILD_TUTORIAL) return <ChildTutorial onReady={() => setAppState(APP_STATES.CHILD_DRAWING)} />;
+    if (appState === APP_STATES.CHILD_DRAWING) return <ChildDrawingCanvas onSubmit={handleDrawingSubmit} />;
+    if (appState === APP_STATES.CHILD_VOICE) return <ChildVoiceScene drawing={drawingData} onSent={handleVoiceSent} />;
+    return <ChildWaiting drawing={drawingData} transcript={voiceData} />;
+  };
+
+  if (appState === APP_STATES.LANDING) {
+    return (
+      <div className="w-full h-full relative">
+        <DemoConsole role={role} setRole={setRole} appState={appState} />
+        <LandingPage
+          onEnterChild={() => { setRole(ROLES.CHILD); setAppState(APP_STATES.CHILD_TUTORIAL); }}
+          onEnterParent={() => { setRole(ROLES.PARENT); setAppState(APP_STATES.WAITING_PARENT); }}
+        />
+      </div>
+    );
+  }
+
+  if (appState === APP_STATES.BOOK_READY) {
+    return (
+      <div className="w-full h-full relative">
+        <DemoConsole role={role} setRole={setRole} appState={appState} />
+        <BookReader transcript={voiceData} parentText={parentTextData} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full relative">
+      <DemoConsole role={role} setRole={setRole} appState={appState} />
+      <div className="w-full h-full">
+        {role === ROLES.CHILD ? renderChild() : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-200 via-slate-100 to-stone-200 pt-16 pb-8 px-4">
+            {appState === APP_STATES.PARENT_REVIEW ? (
+              <ParentReview drawing={drawingData} transcript={voiceData} onBookReady={({ childTranscript, parentText }) => { setVoiceData(childTranscript); setParentTextData(parentText); setAppState(APP_STATES.BOOK_READY); }} />
+            ) : (
+              <ParentWaiting />
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
