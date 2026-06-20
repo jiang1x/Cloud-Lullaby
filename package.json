@@ -1,0 +1,9 @@
+{
+  "name": "cloud-lullaby-xfyun-iat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloud Lullaby with XFYUN IAT speech-to-text on Vercel",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
